@@ -1,0 +1,2 @@
+"""Benchmark asset layer placeholders."""
+

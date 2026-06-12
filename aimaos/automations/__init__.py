@@ -1,0 +1,2 @@
+"""Execution automation adapters."""
+
