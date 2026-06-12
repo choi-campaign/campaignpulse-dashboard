@@ -8,7 +8,7 @@ __pycache__/
 
 data/
 uploads/
-reports/
+/data/reports/
 exports/
 
 *.xlsx
