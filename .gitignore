@@ -36,5 +36,9 @@ exports/
 !data/collection_poc/marketplace/auction_legacy/
 !data/collection_poc/marketplace/auction_legacy/downloads/
 !data/collection_poc/marketplace/auction_legacy/downloads/demo_auction_report.csv
+!data/reports/
+!data/reports/demo/
+!data/reports/demo/report.md
+!data/reports/demo/report.txt
 
 .DS_Store
