@@ -1,21 +1,31 @@
+.env
+.env.*
+!.env.example
+
 .venv/
 venv/
+.playwright-browsers/
 __pycache__/
 *.pyc
-.env
-.env.local
 *.log
 
+# 실제 광고주 데이터와 생성 산출물은 GitHub에 올리지 않습니다.
 data/
 uploads/
-/data/reports/
 exports/
-
+/data/reports/
 *.xlsx
 *.xls
-*.csv
 *.xlsb
+*.csv
+
+# Streamlit Cloud 데모용 가짜 데이터만 예외로 포함합니다.
+!samples/
+!samples/demo_data/
+!samples/demo_data/**
+!samples/demo_data/*.csv
+!data/
+!data/raw/
+!data/raw/test_ads_full_visible.csv
 
 .DS_Store
-.streamlit/
-.playwright-browsers/
