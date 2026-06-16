@@ -27,6 +27,10 @@ exports/
 !data/
 !data/raw/
 !data/raw/test_ads_full_visible.csv
+!data/phase2_samples/
+!data/phase2_samples/commerce_sample.csv
+!data/phase2_samples/search_sample.csv
+!data/phase2_samples/ai_visibility_sample.csv
 !data/collection_poc/
 !data/collection_poc/naver_demo_collection.csv
 !data/collection_poc/marketplace/
