@@ -27,5 +27,14 @@ exports/
 !data/
 !data/raw/
 !data/raw/test_ads_full_visible.csv
+!data/collection_poc/
+!data/collection_poc/naver_demo_collection.csv
+!data/collection_poc/marketplace/
+!data/collection_poc/marketplace/gmarket_legacy/
+!data/collection_poc/marketplace/gmarket_legacy/downloads/
+!data/collection_poc/marketplace/gmarket_legacy/downloads/demo_gmarket_report.csv
+!data/collection_poc/marketplace/auction_legacy/
+!data/collection_poc/marketplace/auction_legacy/downloads/
+!data/collection_poc/marketplace/auction_legacy/downloads/demo_auction_report.csv
 
 .DS_Store
