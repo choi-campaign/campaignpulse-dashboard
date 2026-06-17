@@ -51,6 +51,29 @@ Playwright와 시스템 Chrome으로 Streamlit Cloud 화면을 확인했다.
 
 확인 스크린샷은 로컬 작업 폴더의 `data/logs/` 아래에 저장했다.
 
+## 2026-06-17 온라인 재점검
+
+Streamlit Cloud 온라인 사이트를 다시 열어 주요 화면을 스크린샷으로 검증했다.
+
+- 온라인 응답: HTTP 200
+- 종합 대시보드: 광고주 수 3, 주의 이슈 2, 보고서 예정 7 표시
+- 광고 성과 분석: 체험 데이터 펼침 가능
+- 광고 성과 분석 체험 데이터 실행: 우선 처리 이슈 카드 표시 성공
+- 쇼핑몰/매체 분석: 운영 예시 데이터 표시 성공
+- 보고서 센터: 데모 보고서 표시 성공
+- 설정: 시스템 상태와 보호 중인 핵심 기능 표시 성공
+
+확인 스크린샷:
+
+- `data/logs/online_recheck/home.png`
+- `data/logs/online_recheck/ad_analysis_expanded.png`
+- `data/logs/online_recheck/ad_analysis_sample_result.png`
+- `data/logs/online_recheck/commerce.png`
+- `data/logs/online_recheck/reports.png`
+- `data/logs/online_recheck/settings.png`
+
+보고서 센터의 Excel 데모 파일이 빠져 있어 로컬에는 `data/reports/demo/analysis.xlsx`를 추가했다. 원격 바이너리 업로드는 커넥터 제한으로 중단되어 깨진 파일을 올리지 않고 보류했다. 현재 온라인 보고서 센터는 Markdown/TXT 데모 보고서 기준으로 표시된다.
+
 ## 로컬 검증 결과
 
 로컬 최신 앱 기준으로 데모 데이터와 기본 실행 안정성을 다시 확인했다.
