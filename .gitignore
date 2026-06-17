@@ -42,6 +42,7 @@ exports/
 !data/collection_poc/marketplace/auction_legacy/downloads/demo_auction_report.csv
 !data/reports/
 !data/reports/demo/
+!data/reports/demo/analysis.xlsx
 !data/reports/demo/report.md
 !data/reports/demo/report.txt
 
