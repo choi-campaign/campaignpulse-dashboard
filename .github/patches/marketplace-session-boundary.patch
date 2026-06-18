@@ -1,0 +1,29 @@
+--- a/aimaos/collectors/marketplace/marketplace_collection_poc.py
++++ b/aimaos/collectors/marketplace/marketplace_collection_poc.py
+@@ -57 +57,4 @@
+-def run_marketplace_download_poc(project_root: Path = PROJECT_ROOT) -> list[MarketplacePocResult]:
++def run_marketplace_download_poc(
++    project_root: Path = PROJECT_ROOT,
++    downloaded_after: datetime | None = None,
++) -> list[MarketplacePocResult]:
+@@ -72 +75,7 @@
+-        evaluate_profile(profile, checked_at, browser_smoke.status == "success", browser_smoke.detail)
++        evaluate_profile(
++            profile,
++            checked_at,
++            browser_smoke.status == "success",
++            browser_smoke.detail,
++            downloaded_after,
++        )
+@@ -302,0 +312 @@
++    downloaded_after: datetime | None = None,
+@@ -347 +357 @@
+-    detected_files = list_completed_report_downloads(profile.download_dir)
++    detected_files = list_completed_report_downloads(profile.download_dir, after=downloaded_after)
+@@ -664,0 +675 @@
++    downloaded_after = None
+@@ -665,0 +677 @@
++        downloaded_after = datetime.now()
+@@ -667 +679 @@
+-    run_marketplace_download_poc()
++    run_marketplace_download_poc(downloaded_after=downloaded_after)
