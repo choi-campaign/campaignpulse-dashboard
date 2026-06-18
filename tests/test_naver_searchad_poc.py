@@ -2,10 +2,12 @@ from datetime import date
 import csv
 import json
 
+from aimaos.collectors.data_collection_poc import build_report
 from aimaos.collectors.naver_searchad_poc import (
     NaverSearchAdCredentials,
     NaverSearchAdPocClient,
     PocDateRange,
+    PocStepResult,
     all_zero_performance,
     build_stats_attempts,
     extract_stat_rows,
@@ -149,3 +151,33 @@ def test_standard_csv_handles_real_rows_and_empty_response(tmp_path):
     with empty_csv_path.open(encoding="utf-8-sig", newline="") as handle:
         empty_rows = list(csv.DictReader(handle))
     assert all_zero_performance(empty_rows) is True
+
+
+def test_collection_report_uses_actual_execution_results():
+    success_steps = [
+        PocStepResult(name, "성공", f"{name} 성공")
+        for name in (
+            "캠페인 조회",
+            "광고그룹 조회",
+            "기간 성과 조회",
+            "AIMAOS 표준 CSV 변환",
+            "AIMAOS 기존 파이프라인 연결",
+            "오늘 해야 할 일 생성",
+            "보고서 자동 생성",
+            "노출/클릭/광고비 수집",
+        )
+    ]
+    results = {
+        "네이버 검색광고": success_steps,
+        "G마켓": [PocStepResult("리포트 다운로드", "실행 불가", "실제 다운로드 파일 없음")],
+        "옥션": [],
+        "11번가": [],
+    }
+
+    report = build_report(results)
+
+    assert "네이버 검색광고 | 기술 검증 성공" in report
+    assert "네이버 검색광고: 현재 실행 결과에서 실패 단계 없음" in report
+    assert "G마켓: 실제 다운로드 파일 없음" in report
+    assert "Customer ID, Access License, Secret Key가 현재 환경에 없어" not in report
+    assert "네이버 API 수집은 기술 검증 성공" in report
