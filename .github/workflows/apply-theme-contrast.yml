@@ -1,0 +1,49 @@
+name: Apply theme contrast update
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/patches/theme-contrast.patch"
+      - ".github/workflows/apply-theme-contrast.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  apply-and-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Apply patch
+        run: |
+          git apply --check .github/patches/theme-contrast.patch
+          git apply .github/patches/theme-contrast.patch
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: python -m pip install -r requirements-dev.txt
+
+      - name: Verify sources and tests
+        run: |
+          python -m compileall aimaos tests
+          python -m pytest tests -q
+
+      - name: Commit verified change
+        run: |
+          git config user.name "campaignpulse-ci"
+          git config user.email "campaignpulse-ci@users.noreply.github.com"
+          git add aimaos/app/streamlit_app.py
+          git commit -m "Fix light and dark mode button contrast"
+          git push origin HEAD:main
