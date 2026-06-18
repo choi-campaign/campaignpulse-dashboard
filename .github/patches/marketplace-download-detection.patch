@@ -1,19 +1,14 @@
-diff --git a/aimaos/collectors/marketplace/download_watcher.py b/aimaos/collectors/marketplace/download_watcher.py
-index 4f45882..25d08dd 100644
 --- a/aimaos/collectors/marketplace/download_watcher.py
 +++ b/aimaos/collectors/marketplace/download_watcher.py
-@@ -6,6 +6,7 @@ import time
- 
- 
+@@ -8,2 +8,3 @@
  PARTIAL_SUFFIXES = (".crdownload", ".tmp", ".part")
 +REPORT_PATTERNS = ("*.xlsx", "*.xls", "*.csv")
  
- 
- def list_completed_downloads(download_dir: Path, pattern: str = "*.xls*", after: datetime | None = None) -> list[Path]:
-@@ -22,6 +23,20 @@ def list_completed_downloads(download_dir: Path, pattern: str = "*.xls*", after:
-     return sorted(files, key=lambda item: item.stat().st_mtime, reverse=True)
- 
- 
+@@ -21,2 +22,16 @@
+         files.append(path)
++    return sorted(files, key=lambda item: item.stat().st_mtime, reverse=True)
++
++
 +def list_completed_report_downloads(
 +    download_dir: Path,
 +    after: datetime | None = None,
@@ -25,28 +20,15 @@ index 4f45882..25d08dd 100644
 +        files.update(list_completed_downloads(download_dir, pattern, after))
 +    if not include_demo:
 +        files = {path for path in files if not path.name.lower().startswith("demo_")}
-+    return sorted(files, key=lambda item: item.stat().st_mtime, reverse=True)
-+
-+
- def wait_for_completed_download(
-     download_dir: Path,
-     pattern: str = "*.xls*",
-diff --git a/aimaos/collectors/marketplace/gmarket_computer_use_download_poc.py b/aimaos/collectors/marketplace/gmarket_computer_use_download_poc.py
-index 35b66f6..38fbd2e 100644
+     return sorted(files, key=lambda item: item.stat().st_mtime, reverse=True)
 --- a/aimaos/collectors/marketplace/gmarket_computer_use_download_poc.py
 +++ b/aimaos/collectors/marketplace/gmarket_computer_use_download_poc.py
-@@ -10,7 +10,7 @@ from dotenv import load_dotenv
- 
- from aimaos.collectors.marketplace.base_collector import ensure_writable_directory
+@@ -12,3 +12,3 @@
  from aimaos.collectors.marketplace.browser_session import open_manual_collection_browser
 -from aimaos.collectors.marketplace.download_watcher import list_completed_downloads
 +from aimaos.collectors.marketplace.download_watcher import list_completed_report_downloads
  from aimaos.collectors.marketplace.profiles import gmarket_legacy
- from aimaos.pipeline import run_analysis_pipeline
- from aimaos.storage.collection_log import CollectionLogRecord, append_collection_log
-@@ -47,10 +47,8 @@ class GmarketPowerclickPocResult:
-     stages: dict[str, str]
- 
+@@ -49,6 +49,4 @@
  
 -def completed_report_files(download_dir: Path) -> list[Path]:
 -    files: list[Path] = []
@@ -55,11 +37,7 @@ index 35b66f6..38fbd2e 100644
 +def completed_report_files(download_dir: Path, after: datetime | None = None) -> list[Path]:
 +    files = list_completed_report_downloads(download_dir, after)
      valid_files = [
-         path
-         for path in files
-@@ -351,7 +349,10 @@ def run_poc(
-             write_strategy_summary()
-             return result
+@@ -355,3 +353,6 @@
  
 -    detected_files = completed_report_files(profile.download_dir)
 +    detected_files = completed_report_files(
@@ -67,26 +45,15 @@ index 35b66f6..38fbd2e 100644
 +        after=None if watch_downloads_only else started_at,
 +    )
      selected_file = detected_files[0] if detected_files else None
-     if selected_file is None:
-         final_status = "needs_user_authentication" if not watch_downloads_only else "failed"
-diff --git a/aimaos/collectors/marketplace/marketplace_collection_poc.py b/aimaos/collectors/marketplace/marketplace_collection_poc.py
-index d7c3d29..d59822d 100644
 --- a/aimaos/collectors/marketplace/marketplace_collection_poc.py
 +++ b/aimaos/collectors/marketplace/marketplace_collection_poc.py
-@@ -22,7 +22,7 @@ from aimaos.collectors.marketplace.browser_session import (
-     smoke_launch_collection_browser,
-     watch_ad_center_entry,
+@@ -24,3 +24,3 @@
  )
 -from aimaos.collectors.marketplace.download_watcher import list_completed_downloads
 +from aimaos.collectors.marketplace.download_watcher import list_completed_report_downloads
  from aimaos.collectors.marketplace.profiles import (
-     auction_legacy,
-     auction_next,
-@@ -344,7 +344,7 @@ def run_profile_poc(profile: MarketplaceProfile, browser_status: str, *, watch_o
-         )
+@@ -346,3 +346,3 @@
  
 -    detected_files = list_completed_downloads(profile.download_dir, profile.expected_file_pattern)
 +    detected_files = list_completed_report_downloads(profile.download_dir)
      if detected_files:
-         steps.append(PocStep("다운로드 파일 감지", "success", f"{len(detected_files)}개 파일 감지", str(detected_files[0])))
-         return run_audit_and_pipeline(profile, checked_at, steps, detected_files)
