@@ -47,7 +47,7 @@ GitHub에 올리지 않는 항목:
 
 ```text
 Python compile: 성공
-pytest: 18개 통과
+pytest: 20개 통과
 Streamlit AppTest: 성공
 GitHub Actions: 성공
 ```
@@ -63,6 +63,7 @@ GitHub Actions: 성공
 - 네이버 날짜 범위·stats 파싱·표준 CSV
 - G마켓·옥션 다운로드 파일 판정 경계
 - `collection_log` 성공·실패 기록
+- 사이드바 8개 주요 화면 렌더링
 
 ## 현재 남은 병목
 
