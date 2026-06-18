@@ -7,6 +7,8 @@ from aimaos.collectors.marketplace.download_watcher import (
     list_completed_report_downloads,
 )
 from aimaos.collectors.marketplace.gmarket_computer_use_download_poc import completed_report_files
+from aimaos.collectors.marketplace import marketplace_collection_poc
+from aimaos.collectors.marketplace.base_collector import MarketplaceProfile, PROFILE_READY
 from aimaos.storage.collection_log import (
     CollectionLogRecord,
     append_collection_log,
@@ -56,6 +58,42 @@ def test_new_collection_does_not_reuse_stale_download(tmp_path):
 
     assert detected == [new_file]
     assert list_completed_downloads(tmp_path, "*.csv", after=started_at) == [new_file]
+
+
+def test_profile_evaluation_forwards_manual_session_start_time(tmp_path, monkeypatch):
+    started_at = datetime.now()
+    captured: dict[str, datetime | None] = {}
+    profile = MarketplaceProfile(
+        media_key="auction",
+        media_name="옥션",
+        profile_version="legacy",
+        login_url_env_key="TEST_LOGIN_URL",
+        report_url_env_key="TEST_REPORT_URL",
+        default_login_url="https://example.com/login",
+        default_report_url="https://example.com/report",
+        download_dir=tmp_path / "downloads",
+        browser_profile_dir=tmp_path / "browser",
+        status=PROFILE_READY,
+    )
+
+    def fake_list(download_dir: Path, after: datetime | None = None, **_kwargs):
+        captured["after"] = after
+        return []
+
+    monkeypatch.setattr(marketplace_collection_poc, "playwright_installed", lambda: True)
+    monkeypatch.setattr(marketplace_collection_poc, "find_browser_executable", lambda: "browser.exe")
+    monkeypatch.setattr(marketplace_collection_poc, "list_completed_report_downloads", fake_list)
+
+    result = marketplace_collection_poc.evaluate_profile(
+        profile,
+        datetime.now(),
+        True,
+        "ready",
+        downloaded_after=started_at,
+    )
+
+    assert captured["after"] == started_at
+    assert result.detected_files == []
 
 
 def test_collection_log_preserves_success_and_failure_details(tmp_path):
