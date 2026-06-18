@@ -25,7 +25,7 @@ jobs:
           python - <<'PY'
           from pathlib import Path
 
-          prefix = r"C:\Users\admin\Documents\Codex\2026-06-07\aimaos-ai-marketing-association-operating-system\outputs\aimaos_mvp\"
+          prefix = "C:\\Users\\admin\\Documents\\Codex\\2026-06-07\\aimaos-ai-marketing-association-operating-system\\outputs\\aimaos_mvp\\"
           replacements = {
               prefix: "",
               "cmp-a001-01-000000009693823": "cmp-demo-redacted",
