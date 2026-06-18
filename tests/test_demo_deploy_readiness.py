@@ -84,6 +84,18 @@ def test_light_and_dark_mode_button_contrast_is_explicit():
     assert "color: var(--cp-text) !important;" in source
 
 
+def test_public_docs_do_not_expose_poc_identifiers_or_local_user_paths():
+    combined = "\n".join(path.read_text(encoding="utf-8") for path in Path("docs").glob("*.md"))
+    forbidden = (
+        r"C:\Users\admin",
+        "cmp-a001-01-000000009693823",
+        "CODIMA",
+        "더블유아이티",
+    )
+
+    assert not any(value in combined for value in forbidden)
+
+
 def test_uploaded_file_replaces_demo_snapshot_in_streamlit_session():
     demo_notice = "현재 화면은 기능 시연을 위한 데모 데이터 기준입니다. 실제 광고주 데이터가 아닙니다."
     payload = DEMO_DATA.read_bytes()
