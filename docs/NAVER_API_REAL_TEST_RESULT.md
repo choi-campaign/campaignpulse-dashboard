@@ -1,206 +1,69 @@
 # 네이버 검색광고 API 실제 연결 테스트 결과
 
-작성일: 2026-06-10
+작성일: 2026-06-10  
+상태 갱신: 2026-06-19
 
-## 1. 실행 명령
+## 최종 판정
 
-```powershell
-python -m aimaos.collectors.data_collection_poc
-```
+**기술 검증 성공**
 
-실제 실행 경로:
+초기 Codex 실행 환경에서는 네트워크 소켓 제한으로 `NETWORK_ERROR`가 발생했지만, 로컬 PowerShell 재실행에서는 네이버 API 인증과 실제 조회가 성공했다.
 
-```text
-C:\Users\admin\Documents\Codex\2026-06-07\aimaos-ai-marketing-association-operating-system\outputs\aimaos_mvp
-```
+따라서 네이버 API 연동 가능성을 실패로 분류하지 않는다.
 
-## 2. 최종 성공 여부
-
-**실패**
-
-단, API 연결 정보 자체는 `.env`에서 정상 인식되었다.
+## 실제 성공 항목
 
 | 항목 | 결과 |
 | --- | --- |
 | Customer ID 인식 | 성공 |
 | Access License 인식 | 성공 |
 | Secret Key 인식 | 성공 |
-| 네이버 API 실제 호출 | 실패 |
-| 캠페인 조회 | 실패 |
-| 광고그룹 조회 | 실패 |
-| 키워드 조회 | 실패 |
-| 전일 성과 조회 | 실행 불가 |
-| 매출/전환 조회 | 실행 불가 |
-| AIMAOS 파이프라인 연결 | 대기 |
+| 캠페인 조회 | HTTP 200, 1건 |
+| 광고그룹 조회 | HTTP 200, 2건 |
+| 키워드 조회 | 성공, 0건 |
+| stats 조회 | 성공 |
+| 성공 조합 | 캠페인 반복 `ids` / rich fields |
+| 표준 CSV 생성 | 성공 |
+| 기존 분석 파이프라인 | 성공 |
+| 오늘 해야 할 일 | 성공 |
+| Excel/Markdown/TXT 보고서 | 성공 |
 
-## 3. 실제 응답 내용 요약
+## 실제 증거
 
-네이버 API 호출 3건 모두 동일한 네트워크 오류로 실패했다.
+- `data/collection_poc/20260610_142203/naver_searchad/campaigns.json`
+- `data/collection_poc/20260610_142203/naver_searchad/adgroups.json`
+- `data/collection_poc/20260610_142203/naver_searchad/keywords.json`
+- `data/collection_poc/20260610_142203/naver_searchad/yesterday_stats.json`
+- `data/collection_poc/20260610_142203/naver_searchad/naver_searchad_standard.csv`
 
-| 호출 항목 | 상태 | 응답 요약 |
-| --- | --- | --- |
-| 캠페인 조회 | 실패 | `NETWORK_ERROR` |
-| 광고그룹 조회 | 실패 | `NETWORK_ERROR` |
-| 키워드 조회 | 실패 | `NETWORK_ERROR` |
+## stats 응답 상태
 
-저장된 오류 원문:
+API 호출은 성공했지만 검증한 전일의 `response.data`는 빈 배열이었다.
 
-```text
-[WinError 10013] 액세스 권한에 의해 숨겨진 소켓에 액세스를 시도했습니다
-```
+이 상태는 인증 실패가 아니다. 해당 기간에 반환할 성과 행이 없었다는 의미다.
 
-이 오류는 API Key 인증 실패 응답이 아니라, 현재 실행 환경에서 외부 네트워크 소켓 접근이 차단된 상태로 판단된다.
+빈 배열은 요청 캠페인 ID 기준 0 지표 표준 행으로 변환했으며, AIMAOS는 이 데이터를 실제 운영 성과로 오해하지 않도록 `데이터 부족 / 최신 성과 확인 필요`로 처리한다.
 
-## 4. 조회 가능한 광고주 수
+## 현재 수집 가능성
 
-**0개**
+- 캠페인/광고그룹/키워드 구조 조회: 가능
+- 기간별 stats 요청: 가능
+- 노출/클릭/광고비: 응답 행이 있는 기간에서 수집 가능
+- 전환/매출/ROAS: 계정의 전환 추적 설정과 응답 필드에 따라 조건부
+- 대행사 다계정 순회: Customer ID 목록과 접근 범위 추가 검증 필요
 
-이 값은 실제 광고주가 없다는 뜻이 아니다.
+## 남은 검증
 
-현재는 캠페인/광고그룹/키워드 목록 조회 자체가 네트워크 오류로 실패했기 때문에 접근 가능한 광고주 수를 판정할 수 없다.
+1. 실제 성과가 존재하는 날짜 범위의 `response.data` 행 확보
+2. 광고그룹 단위 stats 안정성 확인
+3. 키워드가 존재하는 계정의 키워드 단위 stats 확인
+4. 대행사 계정의 여러 Customer ID 순회
+5. 호출량 제한과 실패 재시도 정책
 
-## 5. 광고주 선택 가능 여부
-
-**확인 실패**
-
-사유:
-
-- 네이버 API 연결 정보는 준비됨
-- 그러나 API 호출이 네트워크 오류로 실패
-- 캠페인/광고그룹/키워드 응답을 받지 못함
-- 대행사 계정 기준 다광고주 접근 가능 여부도 아직 확인 불가
-
-## 6. 전일 데이터 조회 가능 여부
-
-**확인 실패**
-
-사유:
-
-- 전일 성과 조회는 통계 조회 대상 ID가 필요함
-- 캠페인, 광고그룹, 키워드 조회가 모두 실패하여 통계 조회 대상 ID를 확보하지 못함
-- 따라서 전일 데이터 조회를 실행하지 못함
-
-## 7. 핵심 지표 수집 가능 여부
-
-| 지표 | 확인 결과 |
-| --- | --- |
-| 노출 | 확인 실패 |
-| 클릭 | 확인 실패 |
-| 광고비 | 확인 실패 |
-| 전환 | 확인 실패 |
-| 매출 | 확인 실패 |
-| ROAS | 확인 실패 |
-
-현재 실패 원인은 지표 미지원이 아니라 API 호출 전 단계의 네트워크 차단이다.
-
-## 8. API 제한 사항
-
-이번 테스트에서는 네이버 API의 호출량 제한, 권한 제한, 리포트 필드 제한은 확인하지 못했다.
-
-확인하지 못한 이유:
-
-- API 서버까지 요청이 도달하지 못함
-- HTTP 401, 403, 429 같은 API 응답을 받지 못함
-- 네트워크 소켓 접근 단계에서 실패함
-
-추후 실제 네트워크가 허용된 환경에서 확인해야 할 제한 사항:
-
-1. 대행사 계정으로 여러 광고주 데이터 조회 가능 여부
-2. Customer ID별 접근 범위
-3. 전환수/매출 필드 제공 여부
-4. 전일 데이터 조회 가능 날짜 범위
-5. 호출량 제한
-6. 리포트 다운로드 방식과 통계 API 방식의 차이
-
-## 9. 오류 발생 원인
-
-가장 가능성이 높은 원인:
-
-```text
-현재 실행 환경의 네트워크 또는 Windows 소켓 접근 권한 제한
-```
-
-확인 근거:
-
-- `.env`의 네이버 API 연결 정보는 정상 인식됨
-- 네이버 API 호출 시 HTTP 인증 오류가 아니라 `WinError 10013` 발생
-- 캠페인, 광고그룹, 키워드 조회 모두 동일 오류
-
-따라서 현재 실패는 API 키 자체의 실패로 단정하면 안 된다.
-
-## 10. 생성된 증거 파일
-
-```text
-data/collection_poc/20260610_063030/naver_searchad/campaigns.json
-data/collection_poc/20260610_063030/naver_searchad/adgroups.json
-data/collection_poc/20260610_063030/naver_searchad/keywords.json
-data/collection_poc/20260610_063030/poc_results.json
-```
-
-각 JSON에는 API 응답 대신 동일한 네트워크 오류 원문이 저장되어 있다.
-
-## 11. 기존 AIMAOS 파이프라인 연결 가능 여부
-
-**아직 확인 불가**
-
-사유:
-
-- 전일 성과 데이터를 받지 못함
-- 표준 CSV 변환 대상 원본이 없음
-- 따라서 기존 분석 파이프라인, 오늘 해야 할 일 엔진, 보고서 자동 생성까지 연결하지 못함
-
-구조상 연결 순서는 아래와 같다.
-
-```text
-네이버 API 전일 성과 응답
-  ↓
-표준 컬럼 변환
-  ↓
-기존 AIMAOS 분석 파이프라인
-  ↓
-오늘 해야 할 일 생성
-  ↓
-보고서 자동 생성
-```
-
-## 12. 다음 단계
-
-### 1순위
-
-네트워크 접근이 허용된 로컬 터미널에서 동일 명령을 재실행한다.
+## 실행 명령
 
 ```powershell
-cd C:\Users\admin\Documents\Codex\2026-06-07\aimaos-ai-marketing-association-operating-system\outputs\aimaos_mvp
-.\.venv\Scripts\python.exe -m aimaos.collectors.data_collection_poc
+.\.venv\Scripts\python.exe -m aimaos.collectors.data_collection_poc --start-date 2026-06-01 --end-date 2026-06-07
 ```
 
-### 2순위
-
-네이버 API 서버 접근 가능 여부를 별도로 확인한다.
-
-```powershell
-Test-NetConnection api.searchad.naver.com -Port 443
-```
-
-### 3순위
-
-네트워크가 정상인데도 실패하면 아래를 확인한다.
-
-- Customer ID 값
-- Access License 값
-- Secret Key 값
-- 네이버 검색광고 API 사용 설정 여부
-- 대행사 계정에서 해당 Customer ID 접근 권한
-- API 호출 IP 제한 여부
-
-### 4순위
-
-캠페인/광고그룹/키워드 중 하나라도 조회되면 즉시 전일 성과 조회와 표준 CSV 변환을 진행한다.
-
-## 13. 최종 판단
-
-현재 결과는 **실패**다.
-
-다만 실패 원인은 네이버 API 키 인증 실패로 확인된 것이 아니라, 실행 환경의 네트워크 소켓 접근 차단으로 보인다.
-
-따라서 네이버 API 연동 가능성 자체는 아직 폐기할 수 없고, 네트워크 허용 환경에서 재실행해야 한다.
+API 키와 실제 광고주 정보는 `.env`에서만 관리하며 GitHub에 올리지 않는다.
