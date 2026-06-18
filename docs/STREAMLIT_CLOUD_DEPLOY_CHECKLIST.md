@@ -18,7 +18,6 @@ aimaos/app/streamlit_app.py
 - `data/phase2_samples/commerce_sample.csv`
 - `data/phase2_samples/search_sample.csv`
 - `data/phase2_samples/ai_visibility_sample.csv`
-- `data/reports/demo/analysis.xlsx`
 - `data/reports/demo/report.md`
 - `data/reports/demo/report.txt`
 
@@ -68,11 +67,11 @@ aimaos/app/streamlit_app.py
 - 광고 성과 분석 체험 데이터 펼침: 성공
 - 광고 성과 분석 체험 데이터 실행: 성공
 - 쇼핑몰/매체 분석 운영 예시 데이터 표시: 성공
-- 보고서 센터 Excel/Markdown/TXT 데모 보고서 표시: 성공
+- 보고서 센터 Markdown/TXT 데모 보고서 표시: 성공
 - 로컬 `python -m compileall aimaos tests`: 성공
 - 로컬 Streamlit AppTest: 예외 0건, 오류 0건
 - 로컬 `python -m pytest tests -q`: 5 passed
-- GitHub Actions 자동 검증: `.github/workflows/ci.yml`
+- GitHub Actions 자동 검증: 성공 (`CampaignPulse checks #4`, 39초)
 
 ## 로컬 테스트 실행
 
@@ -110,3 +109,5 @@ python -m pytest tests -q
 ```
 
 데모 CSV나 보고서 파일이 누락되거나 기존 분석 파이프라인이 데모 데이터를 처리하지 못하면 배포 준비 검사가 실패합니다.
+
+현재 자동 검증은 GitHub에 포함된 가짜 데이터 `samples/demo_data/campaignpulse_demo_ads.csv`를 사용합니다. 실제 광고주 원본 파일이나 API 키는 사용하지 않습니다.
