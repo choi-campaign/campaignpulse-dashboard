@@ -54,7 +54,10 @@ def load_marketplace_profiles(project_root: Path) -> list[MarketplaceProfile]:
     ]
 
 
-def run_marketplace_download_poc(project_root: Path = PROJECT_ROOT) -> list[MarketplacePocResult]:
+def run_marketplace_download_poc(
+    project_root: Path = PROJECT_ROOT,
+    downloaded_after: datetime | None = None,
+) -> list[MarketplacePocResult]:
     load_dotenv(project_root / ".env")
     checked_at = datetime.now()
     profiles = load_marketplace_profiles(project_root)
@@ -69,7 +72,13 @@ def run_marketplace_download_poc(project_root: Path = PROJECT_ROOT) -> list[Mark
     )
 
     results = [
-        evaluate_profile(profile, checked_at, browser_smoke.status == "success", browser_smoke.detail)
+        evaluate_profile(
+            profile,
+            checked_at,
+            browser_smoke.status == "success",
+            browser_smoke.detail,
+            downloaded_after,
+        )
         for profile in profiles
     ]
     write_json_evidence(results, browser_smoke.browser_executable)
@@ -300,6 +309,7 @@ def evaluate_profile(
     checked_at: datetime,
     browser_smoke_ok: bool,
     browser_smoke_detail: str,
+    downloaded_after: datetime | None = None,
 ) -> MarketplacePocResult:
     steps: list[PocStep] = []
 
@@ -344,7 +354,7 @@ def evaluate_profile(
             ]
         )
 
-    detected_files = list_completed_report_downloads(profile.download_dir)
+    detected_files = list_completed_report_downloads(profile.download_dir, after=downloaded_after)
     if detected_files:
         steps.append(PocStep("다운로드 파일 감지", "success", f"{len(detected_files)}개 파일 감지", str(detected_files[0])))
         return run_audit_and_pipeline(profile, checked_at, steps, detected_files)
@@ -662,7 +672,9 @@ if __name__ == "__main__":
     if args.entry_check_profile:
         run_ad_center_entry_check(args.entry_check_profile, args.wait_seconds, args.entry_url)
         raise SystemExit(0)
+    downloaded_after = None
     if args.open_profile:
+        downloaded_after = datetime.now()
         run_manual_profile_session(args.open_profile, args.wait_seconds)
-    run_marketplace_download_poc()
+    run_marketplace_download_poc(downloaded_after=downloaded_after)
     print(REPORT_PATH)
