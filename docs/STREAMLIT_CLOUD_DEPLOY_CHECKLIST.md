@@ -18,6 +18,7 @@ aimaos/app/streamlit_app.py
 - `data/phase2_samples/commerce_sample.csv`
 - `data/phase2_samples/search_sample.csv`
 - `data/phase2_samples/ai_visibility_sample.csv`
+- `data/reports/demo/analysis.xlsx`
 - `data/reports/demo/report.md`
 - `data/reports/demo/report.txt`
 
@@ -67,9 +68,24 @@ aimaos/app/streamlit_app.py
 - 광고 성과 분석 체험 데이터 펼침: 성공
 - 광고 성과 분석 체험 데이터 실행: 성공
 - 쇼핑몰/매체 분석 운영 예시 데이터 표시: 성공
-- 보고서 센터 Markdown/TXT 데모 보고서 표시: 성공
+- 보고서 센터 Excel/Markdown/TXT 데모 보고서 표시: 성공
 - 로컬 `python -m compileall aimaos tests`: 성공
 - 로컬 Streamlit AppTest: 예외 0건, 오류 0건
+- 로컬 `python -m pytest tests -q`: 5 passed
+
+## 로컬 테스트 실행
+
+테스트 의존성 설치:
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
+```
+
+테스트 실행:
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest tests -q
+```
 
 ## 현재 반영 방식
 
