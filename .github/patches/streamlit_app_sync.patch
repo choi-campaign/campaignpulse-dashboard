@@ -326,7 +326,7 @@
 -            render_analysis_result(result, view_mode, advertiser="광고주 A")
 +            render_analysis_result(result, view_mode, advertiser=preview_advertiser)
  
-     st.caption("체험 데이터는 상위 50행만 미리보기로 표시합니다.")
+     st.caption("체험 데이터는 상위 50행만 미리보기로 표시합니다. 실제 광고주 데이터는 업로드 후 분석해 주세요.")
      try:
 -        sample = pd.read_csv(AD_SAMPLE_PATH)
 +        sample = pd.read_csv(sample_path)
@@ -401,8 +401,3 @@
  
  
  def render_sidebar_menu_button(item: str, badge_value: int, active_menu: str) -> None:
-@@ -3507,4 +3657,3 @@
-     render_channel_management()
- else:
-     render_settings_page()
--
