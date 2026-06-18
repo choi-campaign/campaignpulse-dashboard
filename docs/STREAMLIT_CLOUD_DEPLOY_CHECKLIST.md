@@ -70,8 +70,8 @@ aimaos/app/streamlit_app.py
 - 보고서 센터 Markdown/TXT 데모 보고서 표시: 성공
 - 로컬 `python -m compileall aimaos tests`: 성공
 - 로컬 Streamlit AppTest: 예외 0건, 오류 0건
-- 로컬 `python -m pytest tests -q`: 5 passed
-- GitHub Actions 자동 검증: 성공 (`CampaignPulse checks #4`, 39초)
+- 로컬 `python -m pytest tests -q`: 6 passed
+- GitHub Actions 자동 검증: 성공 (`CampaignPulse checks #17`, 32초)
 
 ## 로컬 테스트 실행
 
