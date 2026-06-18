@@ -72,6 +72,7 @@ aimaos/app/streamlit_app.py
 - 로컬 `python -m compileall aimaos tests`: 성공
 - 로컬 Streamlit AppTest: 예외 0건, 오류 0건
 - 로컬 `python -m pytest tests -q`: 5 passed
+- GitHub Actions 자동 검증: `.github/workflows/ci.yml`
 
 ## 로컬 테스트 실행
 
@@ -98,3 +99,14 @@ aimaos/app/streamlit_app.py
 원격 `aimaos/app/streamlit_app.py`는 로컬 최신본보다 오래된 상태입니다. 현재 온라인 데모는 기존 원격 앱이 이미 읽는 경로에 가짜 데이터를 배치해 표시 문제를 해결한 상태입니다.
 
 다음 정식 안정화 작업은 로컬 최신 `streamlit_app.py` 전체를 GitHub 원격 저장소에 동기화하는 것입니다.
+
+## 자동 재발 방지
+
+GitHub의 `main` 브랜치 push와 pull request에서는 다음 검사가 자동 실행됩니다.
+
+```text
+python -m compileall aimaos tests
+python -m pytest tests -q
+```
+
+데모 CSV나 보고서 파일이 누락되거나 기존 분석 파이프라인이 데모 데이터를 처리하지 못하면 배포 준비 검사가 실패합니다.
