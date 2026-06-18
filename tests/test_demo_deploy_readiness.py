@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import pandas as pd
+from streamlit.testing.v1 import AppTest
 
 from aimaos.pipeline import run_analysis_pipeline
 
@@ -71,3 +72,23 @@ def test_streamlit_cloud_demo_mode_is_explicit_and_uploads_take_priority():
     assert 'UPLOADED_SNAPSHOT_KEY = "campaignpulse_uploaded_snapshot"' in source
     assert "st.session_state[UPLOADED_SNAPSHOT_KEY]" in source
     assert "현재 세션은 업로드 데이터가 우선 적용됩니다." in source
+
+
+def test_uploaded_file_replaces_demo_snapshot_in_streamlit_session():
+    demo_notice = "현재 화면은 기능 시연을 위한 데모 데이터 기준입니다. 실제 광고주 데이터가 아닙니다."
+    payload = DEMO_DATA.read_bytes()
+    app = AppTest.from_file(str(STREAMLIT_APP), default_timeout=60).run(timeout=60)
+
+    app.button("sidebar_menu_04").click().run(timeout=60)
+    app.file_uploader("analysis_file_upload").upload(
+        "safe_upload.csv",
+        payload,
+        "text/csv",
+    ).run(timeout=60)
+    app.button("analysis_upload_run_button").click().run(timeout=60)
+    app.run(timeout=60)
+
+    assert app.session_state["campaignpulse_uploaded_snapshot"] is not None
+    assert demo_notice not in [message.value for message in app.info]
+    assert app.checkbox("campaignpulse_demo_data_enabled").disabled is True
+    assert len(app.exception) == 0
