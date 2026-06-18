@@ -25,13 +25,13 @@
 - profile: `gmarket_legacy`
 - 로그인 URL 상태: 확인됨
 - 리포트 URL 상태: 미확보
-- 다운로드 폴더: `C:\Users\admin\Documents\Codex\2026-06-07\aimaos-ai-marketing-association-operating-system\outputs\aimaos_mvp\data\collection_poc\marketplace\gmarket_legacy\downloads`
-- 브라우저 프로필: `C:\Users\admin\Documents\Codex\2026-06-07\aimaos-ai-marketing-association-operating-system\outputs\aimaos_mvp\data\collection_poc\marketplace\gmarket_legacy\browser_profile`
+- 다운로드 폴더: `data\collection_poc\marketplace\gmarket_legacy\downloads`
+- 브라우저 프로필: `data\collection_poc\marketplace\gmarket_legacy\browser_profile`
 
 | 점검 항목 | 상태 | 내용 |
 | --- | --- | --- |
-| 전용 다운로드 폴더 | 성공 | C:\Users\admin\Documents\Codex\2026-06-07\aimaos-ai-marketing-association-operating-system\outputs\aimaos_mvp\data\collection_poc\marketplace\gmarket_legacy\downloads |
-| 전용 브라우저 프로필 | 성공 | C:\Users\admin\Documents\Codex\2026-06-07\aimaos-ai-marketing-association-operating-system\outputs\aimaos_mvp\data\collection_poc\marketplace\gmarket_legacy\browser_profile |
+| 전용 다운로드 폴더 | 성공 | data\collection_poc\marketplace\gmarket_legacy\downloads |
+| 전용 브라우저 프로필 | 성공 | data\collection_poc\marketplace\gmarket_legacy\browser_profile |
 | Playwright 패키지 | 성공 | 설치됨 |
 | Chrome/Edge 실행 파일 | 성공 | C:\Program Files\Google\Chrome\Application\chrome.exe |
 | 수집 브라우저 실행 | 성공 | Dedicated collection browser launched. |
@@ -47,13 +47,13 @@
 - profile: `auction_legacy`
 - 로그인 URL 상태: 확인됨
 - 리포트 URL 상태: 미확보
-- 다운로드 폴더: `C:\Users\admin\Documents\Codex\2026-06-07\aimaos-ai-marketing-association-operating-system\outputs\aimaos_mvp\data\collection_poc\marketplace\auction_legacy\downloads`
-- 브라우저 프로필: `C:\Users\admin\Documents\Codex\2026-06-07\aimaos-ai-marketing-association-operating-system\outputs\aimaos_mvp\data\collection_poc\marketplace\auction_legacy\browser_profile`
+- 다운로드 폴더: `data\collection_poc\marketplace\auction_legacy\downloads`
+- 브라우저 프로필: `data\collection_poc\marketplace\auction_legacy\browser_profile`
 
 | 점검 항목 | 상태 | 내용 |
 | --- | --- | --- |
-| 전용 다운로드 폴더 | 성공 | C:\Users\admin\Documents\Codex\2026-06-07\aimaos-ai-marketing-association-operating-system\outputs\aimaos_mvp\data\collection_poc\marketplace\auction_legacy\downloads |
-| 전용 브라우저 프로필 | 성공 | C:\Users\admin\Documents\Codex\2026-06-07\aimaos-ai-marketing-association-operating-system\outputs\aimaos_mvp\data\collection_poc\marketplace\auction_legacy\browser_profile |
+| 전용 다운로드 폴더 | 성공 | data\collection_poc\marketplace\auction_legacy\downloads |
+| 전용 브라우저 프로필 | 성공 | data\collection_poc\marketplace\auction_legacy\browser_profile |
 | Playwright 패키지 | 성공 | 설치됨 |
 | Chrome/Edge 실행 파일 | 성공 | C:\Program Files\Google\Chrome\Application\chrome.exe |
 | 수집 브라우저 실행 | 성공 | Dedicated collection browser launched. |
@@ -89,8 +89,8 @@
 
 ## 8. 다운로드 파일 경로
 
-- G마켓: 아직 감지된 다운로드 파일 없음. 감지 폴더 `C:\Users\admin\Documents\Codex\2026-06-07\aimaos-ai-marketing-association-operating-system\outputs\aimaos_mvp\data\collection_poc\marketplace\gmarket_legacy\downloads`
-- 옥션: 아직 감지된 다운로드 파일 없음. 감지 폴더 `C:\Users\admin\Documents\Codex\2026-06-07\aimaos-ai-marketing-association-operating-system\outputs\aimaos_mvp\data\collection_poc\marketplace\auction_legacy\downloads`
+- G마켓: 아직 감지된 다운로드 파일 없음. 감지 폴더 `data\collection_poc\marketplace\gmarket_legacy\downloads`
+- 옥션: 아직 감지된 다운로드 파일 없음. 감지 폴더 `data\collection_poc\marketplace\auction_legacy\downloads`
 
 ## 9. raw_media_audit 연결
 

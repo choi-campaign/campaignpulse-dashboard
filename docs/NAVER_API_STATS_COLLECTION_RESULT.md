@@ -6,11 +6,11 @@
 
 ## 1. 키워드 조회 성공 여부
 
-- 성공: 광고그룹 ID 기준 키워드 조회 성공. 키워드 0건 조회. 증거: `C:\Users\admin\Documents\Codex\2026-06-07\aimaos-ai-marketing-association-operating-system\outputs\aimaos_mvp\data\collection_poc\20260610_142203\naver_searchad\keywords.json`
+- 성공: 광고그룹 ID 기준 키워드 조회 성공. 키워드 0건 조회. 증거: `data\collection_poc\20260610_142203\naver_searchad\keywords.json`
 
 ## 2. stats API 성과 조회 성공 여부
 
-- 성공: 전일(2026-06-09) stats API 조회 성공. 성공 조합: 캠페인 반복 ids / rich fields 증거: `C:\Users\admin\Documents\Codex\2026-06-07\aimaos-ai-marketing-association-operating-system\outputs\aimaos_mvp\data\collection_poc\20260610_142203\naver_searchad\yesterday_stats.json`
+- 성공: 전일(2026-06-09) stats API 조회 성공. 성공 조합: 캠페인 반복 ids / rich fields 증거: `data\collection_poc\20260610_142203\naver_searchad\yesterday_stats.json`
 
 ## 3. 성공한 idType/fields 조합
 
@@ -59,11 +59,11 @@
 
 ## 실행 증거
 
-- 증거 폴더: C:\Users\admin\Documents\Codex\2026-06-07\aimaos-ai-marketing-association-operating-system\outputs\aimaos_mvp\data\collection_poc\20260610_142203\naver_searchad
+- 증거 폴더: data\collection_poc\20260610_142203\naver_searchad
 - stats 시도 파일:
-  - C:\Users\admin\Documents\Codex\2026-06-07\aimaos-ai-marketing-association-operating-system\outputs\aimaos_mvp\data\collection_poc\20260610_142203\naver_searchad\stats_attempt_01_campaign_adgroup_rich.json
-  - C:\Users\admin\Documents\Codex\2026-06-07\aimaos-ai-marketing-association-operating-system\outputs\aimaos_mvp\data\collection_poc\20260610_142203\naver_searchad\stats_attempt_02_campaign_adgroup_basic.json
-  - C:\Users\admin\Documents\Codex\2026-06-07\aimaos-ai-marketing-association-operating-system\outputs\aimaos_mvp\data\collection_poc\20260610_142203\naver_searchad\stats_attempt_03_campaign_rich.json
+  - data\collection_poc\20260610_142203\naver_searchad\stats_attempt_01_campaign_adgroup_rich.json
+  - data\collection_poc\20260610_142203\naver_searchad\stats_attempt_02_campaign_adgroup_basic.json
+  - data\collection_poc\20260610_142203\naver_searchad\stats_attempt_03_campaign_rich.json
 
 ## 전체 단계 결과
 
@@ -72,13 +72,13 @@
 | Customer ID | 준비됨 | 환경 변수에서 Customer ID를 확인했습니다. | - |
 | Access License | 준비됨 | 환경 변수에서 Access License를 확인했습니다. | - |
 | Secret Key | 준비됨 | 환경 변수에서 Secret Key를 확인했습니다. | - |
-| 캠페인 조회 | 성공 | 네이버 캠페인 조회 응답: HTTP 200, 조회 건수: 1 | C:\Users\admin\Documents\Codex\2026-06-07\aimaos-ai-marketing-association-operating-system\outputs\aimaos_mvp\data\collection_poc\20260610_142203\naver_searchad\campaigns.json |
-| 광고그룹 조회 | 성공 | 네이버 광고그룹 조회 응답: HTTP 200, 조회 건수: 2 | C:\Users\admin\Documents\Codex\2026-06-07\aimaos-ai-marketing-association-operating-system\outputs\aimaos_mvp\data\collection_poc\20260610_142203\naver_searchad\adgroups.json |
-| 키워드 조회 | 성공 | 광고그룹 ID 기준 키워드 조회 성공. 키워드 0건 조회. | C:\Users\admin\Documents\Codex\2026-06-07\aimaos-ai-marketing-association-operating-system\outputs\aimaos_mvp\data\collection_poc\20260610_142203\naver_searchad\keywords.json |
-| 전일 성과 조회 | 성공 | 전일(2026-06-09) stats API 조회 성공. 성공 조합: 캠페인 반복 ids / rich fields | C:\Users\admin\Documents\Codex\2026-06-07\aimaos-ai-marketing-association-operating-system\outputs\aimaos_mvp\data\collection_poc\20260610_142203\naver_searchad\yesterday_stats.json |
-| 노출/클릭/광고비 수집 | 확인 필요 | 응답은 성공했지만 기본 지표 필드 확인이 필요합니다. | C:\Users\admin\Documents\Codex\2026-06-07\aimaos-ai-marketing-association-operating-system\outputs\aimaos_mvp\data\collection_poc\20260610_142203\naver_searchad\yesterday_stats.json |
-| 전환/매출/ROAS 수집 | 확인 필요 | 전환/매출/ROAS는 계정 추적 설정 또는 지원 필드에 따라 추가 확인이 필요합니다. | C:\Users\admin\Documents\Codex\2026-06-07\aimaos-ai-marketing-association-operating-system\outputs\aimaos_mvp\data\collection_poc\20260610_142203\naver_searchad\yesterday_stats.json |
-| AIMAOS 표준 CSV 변환 | 실패 | stats 응답에서 표준 CSV로 변환할 행을 찾지 못했습니다. | C:\Users\admin\Documents\Codex\2026-06-07\aimaos-ai-marketing-association-operating-system\outputs\aimaos_mvp\data\collection_poc\20260610_142203\naver_searchad\standard_csv_error.json |
+| 캠페인 조회 | 성공 | 네이버 캠페인 조회 응답: HTTP 200, 조회 건수: 1 | data\collection_poc\20260610_142203\naver_searchad\campaigns.json |
+| 광고그룹 조회 | 성공 | 네이버 광고그룹 조회 응답: HTTP 200, 조회 건수: 2 | data\collection_poc\20260610_142203\naver_searchad\adgroups.json |
+| 키워드 조회 | 성공 | 광고그룹 ID 기준 키워드 조회 성공. 키워드 0건 조회. | data\collection_poc\20260610_142203\naver_searchad\keywords.json |
+| 전일 성과 조회 | 성공 | 전일(2026-06-09) stats API 조회 성공. 성공 조합: 캠페인 반복 ids / rich fields | data\collection_poc\20260610_142203\naver_searchad\yesterday_stats.json |
+| 노출/클릭/광고비 수집 | 확인 필요 | 응답은 성공했지만 기본 지표 필드 확인이 필요합니다. | data\collection_poc\20260610_142203\naver_searchad\yesterday_stats.json |
+| 전환/매출/ROAS 수집 | 확인 필요 | 전환/매출/ROAS는 계정 추적 설정 또는 지원 필드에 따라 추가 확인이 필요합니다. | data\collection_poc\20260610_142203\naver_searchad\yesterday_stats.json |
+| AIMAOS 표준 CSV 변환 | 실패 | stats 응답에서 표준 CSV로 변환할 행을 찾지 못했습니다. | data\collection_poc\20260610_142203\naver_searchad\standard_csv_error.json |
 | AIMAOS 기존 파이프라인 연결 | 대기 | 표준 CSV가 생성되지 않아 실행하지 않았습니다. | - |
 | 오늘 해야 할 일 생성 | 대기 | 기존 파이프라인 연결 후 확인합니다. | - |
 | 보고서 자동 생성 | 대기 | 기존 파이프라인 연결 후 확인합니다. | - |

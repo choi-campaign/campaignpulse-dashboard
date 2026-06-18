@@ -18,7 +18,7 @@
 - 시작 URL: `https://adoffice.11st.co.kr/`
 - 관찰 상태: failed
 - 새 페이지/팝업 감지 수: 1
-- 관찰 증거 파일: `C:\Users\admin\Documents\Codex\2026-06-07\aimaos-ai-marketing-association-operating-system\outputs\aimaos_mvp\data\collection_poc\marketplace\11st_adoffice\ad_center_entry_20260611_042257.json`
+- 관찰 증거 파일: `data\collection_poc\marketplace\11st_adoffice\ad_center_entry_20260611_042257.json`
 
 ## 3. 가능한 원인 후보
 

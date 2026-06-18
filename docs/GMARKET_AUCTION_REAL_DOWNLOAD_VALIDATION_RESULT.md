@@ -116,13 +116,13 @@ G마켓:
 G마켓:
 
 ```text
-C:\Users\admin\Documents\Codex\2026-06-07\aimaos-ai-marketing-association-operating-system\outputs\aimaos_mvp\data\collection_poc\marketplace\gmarket_legacy\downloads
+data\collection_poc\marketplace\gmarket_legacy\downloads
 ```
 
 옥션:
 
 ```text
-C:\Users\admin\Documents\Codex\2026-06-07\aimaos-ai-marketing-association-operating-system\outputs\aimaos_mvp\data\collection_poc\marketplace\auction_legacy\downloads
+data\collection_poc\marketplace\auction_legacy\downloads
 ```
 
 ## 8. 다음 검증 조건

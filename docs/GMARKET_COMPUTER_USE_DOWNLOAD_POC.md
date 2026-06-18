@@ -24,7 +24,7 @@ G마켓 파워클릭 G 일별 리포트가 실제 Excel 또는 CSV 파일로 생
 
 ## 5. 새로 추가한 파일
 
-- `C:\Users\admin\Documents\Codex\2026-06-07\aimaos-ai-marketing-association-operating-system\outputs\aimaos_mvp\data\collection_poc\marketplace\gmarket_legacy\gmarket_computer_use_download_poc_20260612_000233.json`
+- `data\collection_poc\marketplace\gmarket_legacy\gmarket_computer_use_download_poc_20260612_000233.json`
 
 ## 6. Computer Use 실제 사용 가능 여부
 
@@ -37,7 +37,7 @@ G마켓 파워클릭 G 일별 리포트가 실제 Excel 또는 CSV 파일로 생
 
 ## 8. 다운로드 파일
 
-- 다운로드 폴더: `C:\Users\admin\Documents\Codex\2026-06-07\aimaos-ai-marketing-association-operating-system\outputs\aimaos_mvp\data\collection_poc\marketplace\gmarket_legacy\downloads`
+- 다운로드 폴더: `data\collection_poc\marketplace\gmarket_legacy\downloads`
 - 감지 파일 수: 0
 - 선택 파일: `-`
 - 파일 크기: 0 bytes

@@ -7,7 +7,7 @@
 - 확인 파일: `data/collection_poc/20260610_142203/naver_searchad/yesterday_stats.json`
 - 최상위 구조: `target`, `params`, `response`
 - 성공 조합: `캠페인 반복 ids / rich fields`
-- 요청 ID: `cmp-a001-01-000000009693823`
+- 요청 ID: `cmp-demo-redacted`
 - 요청 기간: `2026-06-09` ~ `2026-06-09`
 - 요청 fields: `clkCnt`, `impCnt`, `salesAmt`, `ctr`, `cpc`, `avgRnk`, `ccnt`, `convAmt`, `ror`
 - 응답 구조: `response.data`, `response.compTm`, `response.cycleBaseTm`
@@ -28,7 +28,7 @@
 
 ## 3. 생성된 표준 CSV 경로
 
-`C:\Users\admin\Documents\Codex\2026-06-07\aimaos-ai-marketing-association-operating-system\outputs\aimaos_mvp\data\collection_poc\20260610_142203\naver_searchad\naver_searchad_standard.csv`
+`data\collection_poc\20260610_142203\naver_searchad\naver_searchad_standard.csv`
 
 ## 4. 표준 CSV 행 수
 
@@ -58,9 +58,9 @@
 생성된 값:
 
 - 날짜: `2026-06-09`
-- 광고주: `CODIMA`
+- 광고주: `샘플 광고주`
 - 매체: `네이버 검색광고`
-- 캠페인: `더블유아이티`
+- 캠페인: `샘플 캠페인`
 - 노출수: `0`
 - 클릭수: `0`
 - 광고비: `0`
@@ -82,7 +82,7 @@
 
 - 결과: 성공
 - 표준화 행 수: 1행
-- 출력 폴더: `C:\Users\admin\Documents\Codex\2026-06-07\aimaos-ai-marketing-association-operating-system\outputs\aimaos_mvp\data\reports\naver_api_poc_20260610_144102`
+- 출력 폴더: `data\reports\naver_api_poc_20260610_144102`
 
 ## 8. 오늘 해야 할 일 생성 결과
 
@@ -94,9 +94,9 @@
 ## 9. 보고서 생성 결과
 
 - 결과: 성공
-- Markdown: `C:\Users\admin\Documents\Codex\2026-06-07\aimaos-ai-marketing-association-operating-system\outputs\aimaos_mvp\data\reports\naver_api_poc_20260610_144102\report.md`
-- TXT: `C:\Users\admin\Documents\Codex\2026-06-07\aimaos-ai-marketing-association-operating-system\outputs\aimaos_mvp\data\reports\naver_api_poc_20260610_144102\report.txt`
-- Excel: `C:\Users\admin\Documents\Codex\2026-06-07\aimaos-ai-marketing-association-operating-system\outputs\aimaos_mvp\data\reports\naver_api_poc_20260610_144102\analysis.xlsx`
+- Markdown: `data\reports\naver_api_poc_20260610_144102\report.md`
+- TXT: `data\reports\naver_api_poc_20260610_144102\report.txt`
+- Excel: `data\reports\naver_api_poc_20260610_144102\analysis.xlsx`
 
 ## 10. 다음 단계
 
