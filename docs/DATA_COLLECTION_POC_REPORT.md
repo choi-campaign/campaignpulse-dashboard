@@ -78,7 +78,7 @@
 
 ```text
 Python compile: 성공
-pytest: 18개 통과
+pytest: 20개 통과
 Streamlit AppTest: 실제 업로드 데이터가 데모보다 우선됨
 GitHub Actions: 성공
 온라인 데모: 정상 표시
