@@ -22,6 +22,8 @@ https://campaignpulse-dashboard-q58duahzapzaw423gqyrub.streamlit.app/
 - 쇼핑몰/매체 분석 예시 데이터 표시
 - 보고서 센터 Excel / Markdown / TXT 표시
 - 설정 화면 표시
+- 로컬 배포 준비 테스트 5개 통과
+- GitHub push/PR 자동 검증 구성 완료
 
 ## 반영된 안전 데모 데이터
 
@@ -65,6 +67,31 @@ GitHub에 올린 데모 데이터는 모두 가짜 데이터다.
 2. 동기화 후 Streamlit Cloud를 재배포한다.
 3. 데모 모드 안내 문구와 데이터 상태 센터가 로컬과 동일하게 표시되는지 확인한다.
 4. 실제 광고주 파일 업로드가 데모 데이터보다 우선되는지 확인한다.
+
+## 자동 검증
+
+`.github/workflows/ci.yml`은 GitHub의 `main` push와 pull request마다 아래 항목을 검사한다.
+
+- Python 소스 컴파일
+- 안전한 데모 CSV 필수 컬럼과 데이터 개수
+- Streamlit Cloud용 기존 체험 데이터 파일 존재
+- 데모 보고서 Excel / Markdown / TXT 존재
+- 데모 데이터의 기존 분석 파이프라인 통과
+
+실제 광고주 데이터와 API 키는 검사 또는 업로드 대상으로 사용하지 않는다.
+
+## 로컬 검증 명령
+
+```powershell
+.\.venv\Scripts\python.exe -m compileall aimaos tests
+.\.venv\Scripts\python.exe -m pytest tests -q
+```
+
+현재 결과:
+
+```text
+5 passed
+```
 
 ## 검증 스크린샷
 
