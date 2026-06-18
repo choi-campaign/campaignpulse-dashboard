@@ -96,6 +96,23 @@ def test_public_docs_do_not_expose_poc_identifiers_or_local_user_paths():
     assert not any(value in combined for value in forbidden)
 
 
+def test_all_primary_streamlit_pages_render_without_exceptions():
+    app = AppTest.from_file(str(STREAMLIT_APP), default_timeout=60).run(timeout=60)
+
+    for menu_key in (
+        "sidebar_menu_01",
+        "sidebar_menu_02",
+        "sidebar_menu_03",
+        "sidebar_menu_04",
+        "sidebar_menu_05",
+        "sidebar_menu_06",
+        "sidebar_menu_07",
+        "sidebar_menu_08",
+    ):
+        app.button(menu_key).click().run(timeout=60)
+        assert len(app.exception) == 0, menu_key
+
+
 def test_uploaded_file_replaces_demo_snapshot_in_streamlit_session():
     demo_notice = "현재 화면은 기능 시연을 위한 데모 데이터 기준입니다. 실제 광고주 데이터가 아닙니다."
     payload = DEMO_DATA.read_bytes()
