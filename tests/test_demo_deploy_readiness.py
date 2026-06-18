@@ -74,6 +74,16 @@ def test_streamlit_cloud_demo_mode_is_explicit_and_uploads_take_priority():
     assert "현재 세션은 업로드 데이터가 우선 적용됩니다." in source
 
 
+def test_light_and_dark_mode_button_contrast_is_explicit():
+    source = STREAMLIT_APP.read_text(encoding="utf-8")
+
+    assert '[data-testid="stSidebar"] .stButton > button [data-testid="stMarkdownContainer"]' in source
+    assert "color: #F8FAFC !important;" in source
+    assert '[data-testid="stMain"] .stButton > button[kind="secondary"]' in source
+    assert "background: var(--cp-white) !important;" in source
+    assert "color: var(--cp-text) !important;" in source
+
+
 def test_uploaded_file_replaces_demo_snapshot_in_streamlit_session():
     demo_notice = "현재 화면은 기능 시연을 위한 데모 데이터 기준입니다. 실제 광고주 데이터가 아닙니다."
     payload = DEMO_DATA.read_bytes()
