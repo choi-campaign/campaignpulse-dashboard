@@ -54,6 +54,7 @@ from aimaos.validators.raw_media_audit import (
     audit_media_file,
 )
 from aimaos.storage.retention_cleanup import build_cleanup_plan
+from aimaos.storage.collection_log import collection_status_by_media
 
 
 REPO_ROOT = PROJECT_ROOT.parents[1] if len(PROJECT_ROOT.parents) > 1 else PROJECT_ROOT
@@ -901,6 +902,59 @@ def freshness_status(last_at: datetime | None, connected: bool = True, success: 
     return "오래됨"
 
 
+def apply_collection_log_status(
+    channels: list[dict[str, object]],
+    log_status: dict[str, dict[str, object]],
+) -> None:
+    media_keys = {
+        "네이버": ("naver", "naver_searchad"),
+        "G마켓": ("gmarket",),
+        "옥션": ("auction",),
+        "11번가": ("11st", "elevenst"),
+        "쿠팡": ("coupang",),
+    }
+    for channel in channels:
+        entry = next(
+            (
+                log_status[key]
+                for key in media_keys.get(str(channel["media"]), ())
+                if key in log_status
+            ),
+            None,
+        )
+        if entry is None:
+            continue
+
+        latest_status = str(entry.get("latest_status", "")).lower()
+        latest_finished_at = entry.get("latest_finished_at")
+        last_success_at = entry.get("last_success_at")
+        rate = entry.get("success_rate_30d")
+        channel["last_check_at"] = latest_finished_at
+        channel["success_rate"] = f"{float(rate):.1f}%" if rate is not None else "기록 없음"
+
+        if latest_status == "success":
+            channel["connection"] = "연결 완료"
+            channel["last_at"] = last_success_at or latest_finished_at
+            channel["success"] = True
+            channel["note"] = "최근 수집 로그 기준"
+            channel["failure_reason"] = "-"
+            continue
+
+        channel["success"] = False
+        channel["last_at"] = last_success_at
+        message = str(entry.get("error_message", "")).strip()
+        code = str(entry.get("error_code", "")).strip()
+        if latest_status == "partial":
+            channel["status_override"] = "주의"
+            channel["failure_reason"] = message or "일부 데이터만 수집되어 확인 필요"
+        elif latest_status == "no_data":
+            channel["status_override"] = "연결 안됨"
+            channel["failure_reason"] = message or "선택 기간에 수집된 데이터 없음"
+        else:
+            channel["status_override"] = "연결 안됨"
+            channel["failure_reason"] = message or code or "최근 데이터 수집 실패"
+
+
 def format_status_time(value: datetime | None) -> str:
     return value.strftime("%Y-%m-%d %H:%M") if value else "-"
 
@@ -923,11 +977,21 @@ def collect_data_status_snapshot() -> dict[str, object]:
     raw_root = BASE_DIR / "data" / "raw"
     report_root = BASE_DIR / "data" / "reports"
     demo_root = BASE_DIR / "samples" / "demo_data"
+    collection_log_status = collection_status_by_media()
 
     last_collection_at = latest_file_mtime(collection_root, ("*.csv", "*.xlsx", "*.xls"))
     raw_latest_at = latest_file_mtime(raw_root, ("*.csv", "*.xlsx", "*.xls"))
     if raw_latest_at and (last_collection_at is None or raw_latest_at > last_collection_at):
         last_collection_at = raw_latest_at
+    logged_collection_times = [
+        entry.get("latest_finished_at")
+        for entry in collection_log_status.values()
+        if isinstance(entry.get("latest_finished_at"), datetime)
+    ]
+    if logged_collection_times:
+        latest_logged_collection = max(logged_collection_times)
+        if last_collection_at is None or latest_logged_collection > last_collection_at:
+            last_collection_at = latest_logged_collection
     demo_latest_at = latest_file_mtime(demo_root, ("*.csv", "*.json")) if using_demo_data() else None
     if demo_latest_at and last_collection_at is None:
         last_collection_at = demo_latest_at
@@ -1007,11 +1071,15 @@ def collect_data_status_snapshot() -> dict[str, object]:
             "failure_reason": coupang_reason,
         },
     ]
+    apply_collection_log_status(channels, collection_log_status)
     for channel in channels:
-        channel["status"] = freshness_status(
-            channel["last_at"],
-            connected=channel["connection"] != "연결 필요",
-            success=bool(channel["success"]),
+        channel["status"] = channel.pop(
+            "status_override",
+            freshness_status(
+                channel["last_at"],
+                connected=channel["connection"] != "연결 필요",
+                success=bool(channel["success"]),
+            ),
         )
 
     if using_demo_data():

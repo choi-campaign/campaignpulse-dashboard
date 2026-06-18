@@ -12,6 +12,7 @@ from aimaos.collectors.marketplace.base_collector import MarketplaceProfile, PRO
 from aimaos.storage.collection_log import (
     CollectionLogRecord,
     append_collection_log,
+    collection_status_by_media,
     recent_collection_logs,
 )
 
@@ -132,3 +133,71 @@ def test_collection_log_preserves_success_and_failure_details(tmp_path):
     assert [row["collection_id"] for row in rows] == ["failure-1", "success-1"]
     assert rows[0]["error_code"] == "DOWNLOAD_FILE_NOT_FOUND"
     assert rows[1]["rows_collected"] == 12
+
+    status = collection_status_by_media(
+        db_path,
+        now=datetime(2026, 6, 19, 0, 0, 0),
+    )
+    auction = status["auction"]
+    gmarket = status["gmarket"]
+
+    assert auction["latest_status"] == "failed"
+    assert auction["last_failure_at"] == datetime(2026, 6, 18, 11, 1, 0)
+    assert auction["error_code"] == "DOWNLOAD_FILE_NOT_FOUND"
+    assert auction["success_rate_30d"] == 0
+    assert gmarket["latest_status"] == "success"
+    assert gmarket["last_success_at"] == datetime(2026, 6, 18, 10, 1, 0)
+    assert gmarket["success_rate_30d"] == 100
+
+
+def test_collection_status_read_does_not_create_missing_database(tmp_path):
+    db_path = tmp_path / "missing.sqlite3"
+
+    assert collection_status_by_media(db_path) == {}
+    assert db_path.exists() is False
+
+
+def test_collection_status_uses_latest_attempt_and_preserves_prior_success(tmp_path):
+    db_path = tmp_path / "collection_log.sqlite3"
+    records = [
+        CollectionLogRecord(
+            collection_id="gmarket-success",
+            advertiser_id="sample",
+            media="gmarket",
+            started_at="2026-06-18T09:00:00+09:00",
+            finished_at="2026-06-18T09:01:00+09:00",
+            status="success",
+            rows_collected=20,
+            file_count=1,
+            storage_used_mb=0.5,
+            error_code="",
+            error_message="",
+        ),
+        CollectionLogRecord(
+            collection_id="gmarket-failed",
+            advertiser_id="sample",
+            media="gmarket",
+            started_at="2026-06-18T10:00:00+09:00",
+            finished_at="2026-06-18T10:01:00+09:00",
+            status="failed",
+            rows_collected=0,
+            file_count=0,
+            storage_used_mb=0,
+            error_code="LOGIN_REQUIRED",
+            error_message="로그인 인증이 필요합니다.",
+        ),
+    ]
+    for record in records:
+        append_collection_log(record, db_path)
+
+    gmarket = collection_status_by_media(
+        db_path,
+        now=datetime(2026, 6, 19, 0, 0, 0),
+    )["gmarket"]
+
+    assert gmarket["latest_status"] == "failed"
+    assert gmarket["latest_finished_at"] == datetime(2026, 6, 18, 10, 1, 0)
+    assert gmarket["last_success_at"] == datetime(2026, 6, 18, 9, 1, 0)
+    assert gmarket["last_failure_at"] == datetime(2026, 6, 18, 10, 1, 0)
+    assert gmarket["error_code"] == "LOGIN_REQUIRED"
+    assert gmarket["success_rate_30d"] == 50
