@@ -1,0 +1,72 @@
+name: Sanitize POC documentation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/sanitize-poc-docs.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  sanitize-and-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Sanitize identifiers and local paths
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          prefix = r"C:\Users\admin\Documents\Codex\2026-06-07\aimaos-ai-marketing-association-operating-system\outputs\aimaos_mvp\"
+          replacements = {
+              prefix: "",
+              "cmp-a001-01-000000009693823": "cmp-demo-redacted",
+              "CODIMA": "샘플 광고주",
+              "더블유아이티": "샘플 캠페인",
+          }
+          changed = []
+          for path in Path("docs").glob("*.md"):
+              text = path.read_text(encoding="utf-8")
+              updated = text
+              for source, target in replacements.items():
+                  updated = updated.replace(source, target)
+              if updated != text:
+                  path.write_text(updated, encoding="utf-8")
+                  changed.append(str(path))
+
+          combined = "\n".join(path.read_text(encoding="utf-8") for path in Path("docs").glob("*.md"))
+          forbidden = [prefix, "cmp-a001-01-000000009693823", "CODIMA", "더블유아이티"]
+          assert not any(value in combined for value in forbidden), "Sensitive POC marker remains"
+          assert changed, "No documentation files were sanitized"
+          print("Sanitized:", *changed, sep="\n- ")
+          PY
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: python -m pip install -r requirements-dev.txt
+
+      - name: Verify project
+        run: |
+          python -m compileall aimaos tests
+          python -m pytest tests -q
+
+      - name: Commit sanitized documents
+        run: |
+          git config user.name "campaignpulse-ci"
+          git config user.email "campaignpulse-ci@users.noreply.github.com"
+          git add docs
+          git commit -m "Sanitize POC identifiers and local paths"
+          git push origin HEAD:main
