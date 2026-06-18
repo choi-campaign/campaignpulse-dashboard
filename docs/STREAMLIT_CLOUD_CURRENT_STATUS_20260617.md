@@ -23,7 +23,7 @@ https://campaignpulse-dashboard-q58duahzapzaw423gqyrub.streamlit.app/
 - 보고서 센터 Excel / Markdown / TXT 표시
 - 설정 화면 표시
 - 로컬 배포 준비 테스트 5개 통과
-- GitHub push/PR 자동 검증 구성 완료
+- GitHub push/PR 자동 검증 성공
 
 ## 반영된 안전 데모 데이터
 
@@ -79,6 +79,17 @@ GitHub에 올린 데모 데이터는 모두 가짜 데이터다.
 - 데모 데이터의 기존 분석 파이프라인 통과
 
 실제 광고주 데이터와 API 키는 검사 또는 업로드 대상으로 사용하지 않는다.
+
+2026-06-18 원격 검증 결과:
+
+```text
+CampaignPulse checks #4
+결과: 성공
+소요 시간: 39초
+커밋: ef2a3a3
+```
+
+초기 CI 실패 원인은 GitHub에서 제외된 `data/raw/sample_ads.csv`를 테스트가 참조한 것이었다. 테스트 입력을 GitHub에 포함된 안전한 가짜 데이터 `samples/demo_data/campaignpulse_demo_ads.csv`로 변경해 해결했다.
 
 ## 로컬 검증 명령
 
