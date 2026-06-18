@@ -8,6 +8,7 @@ from aimaos.pipeline import run_analysis_pipeline
 DEMO_DATA = Path("samples/demo_data/campaignpulse_demo_ads.csv")
 LEGACY_SAMPLE = Path("data/raw/test_ads_full_visible.csv")
 DEMO_REPORT_DIR = Path("data/reports/demo")
+STREAMLIT_APP = Path("aimaos/app/streamlit_app.py")
 
 
 def test_safe_demo_data_exists_and_is_not_empty():
@@ -60,3 +61,13 @@ def test_demo_data_can_run_through_existing_pipeline(tmp_path):
     assert result.report_paths.text.exists()
     assert result.analysis.summary["cost"] > 0
     assert result.analysis.summary["revenue"] > 0
+
+
+def test_streamlit_cloud_demo_mode_is_explicit_and_uploads_take_priority():
+    source = STREAMLIT_APP.read_text(encoding="utf-8")
+
+    assert "현재 화면은 기능 시연을 위한 데모 데이터 기준입니다. 실제 광고주 데이터가 아닙니다." in source
+    assert 'DEMO_DATA_PATH = BASE_DIR / "samples" / "demo_data" / "campaignpulse_demo_ads.csv"' in source
+    assert 'UPLOADED_SNAPSHOT_KEY = "campaignpulse_uploaded_snapshot"' in source
+    assert "st.session_state[UPLOADED_SNAPSHOT_KEY]" in source
+    assert "현재 세션은 업로드 데이터가 우선 적용됩니다." in source
