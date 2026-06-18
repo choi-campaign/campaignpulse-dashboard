@@ -89,15 +89,15 @@ aimaos/app/streamlit_app.py
 
 ## 현재 반영 방식
 
-현재 원격 앱 코드는 `data/raw/test_ads_full_visible.csv`를 체험 데이터로 읽습니다. 따라서 Streamlit Cloud에서 바로 예시 화면을 보여주기 위해 같은 경로에 안전한 가짜 데이터를 포함했습니다.
+원격 앱은 `samples/demo_data/campaignpulse_demo_ads.csv`를 기본 데모 데이터로 사용합니다.
 
-장기적으로는 `samples/demo_data/`를 기준으로 데모 모드를 사용하는 구조로 정리하는 것이 좋습니다.
+사이드바에서 데모 데이터 사용 여부를 확인할 수 있고, 사용자가 실제 파일을 분석하면 업로드 데이터가 현재 세션의 우선 데이터가 됩니다. 기존 `data/raw/test_ads_full_visible.csv`는 이전 체험 흐름의 호환성을 위해 유지합니다.
 
 ## 현재 주의사항
 
-원격 `aimaos/app/streamlit_app.py`는 로컬 최신본보다 오래된 상태입니다. 현재 온라인 데모는 기존 원격 앱이 이미 읽는 경로에 가짜 데이터를 배치해 표시 문제를 해결한 상태입니다.
+원격 `aimaos/app/streamlit_app.py` 동기화와 Streamlit Cloud 재배포가 완료되었습니다.
 
-다음 정식 안정화 작업은 로컬 최신 `streamlit_app.py` 전체를 GitHub 원격 저장소에 동기화하는 것입니다.
+온라인 화면에서 데모 안내 문구, 데모 토글, 데모 상태, 광고주 3개와 KPI가 표시되고 브라우저 오류가 없는 것을 확인했습니다.
 
 ## 자동 재발 방지
 
