@@ -22,7 +22,7 @@ from aimaos.collectors.marketplace.browser_session import (
     smoke_launch_collection_browser,
     watch_ad_center_entry,
 )
-from aimaos.collectors.marketplace.download_watcher import list_completed_downloads
+from aimaos.collectors.marketplace.download_watcher import list_completed_report_downloads
 from aimaos.collectors.marketplace.profiles import (
     auction_legacy,
     auction_next,
@@ -344,7 +344,7 @@ def evaluate_profile(
             ]
         )
 
-    detected_files = list_completed_downloads(profile.download_dir, profile.expected_file_pattern)
+    detected_files = list_completed_report_downloads(profile.download_dir)
     if detected_files:
         steps.append(PocStep("다운로드 파일 감지", "success", f"{len(detected_files)}개 파일 감지", str(detected_files[0])))
         return run_audit_and_pipeline(profile, checked_at, steps, detected_files)

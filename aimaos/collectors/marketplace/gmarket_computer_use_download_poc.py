@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 
 from aimaos.collectors.marketplace.base_collector import ensure_writable_directory
 from aimaos.collectors.marketplace.browser_session import open_manual_collection_browser
-from aimaos.collectors.marketplace.download_watcher import list_completed_downloads
+from aimaos.collectors.marketplace.download_watcher import list_completed_report_downloads
 from aimaos.collectors.marketplace.profiles import gmarket_legacy
 from aimaos.pipeline import run_analysis_pipeline
 from aimaos.storage.collection_log import CollectionLogRecord, append_collection_log
@@ -47,10 +47,8 @@ class GmarketPowerclickPocResult:
     stages: dict[str, str]
 
 
-def completed_report_files(download_dir: Path) -> list[Path]:
-    files: list[Path] = []
-    for pattern in ("*.xlsx", "*.xls", "*.csv"):
-        files.extend(list_completed_downloads(download_dir, pattern))
+def completed_report_files(download_dir: Path, after: datetime | None = None) -> list[Path]:
+    files = list_completed_report_downloads(download_dir, after)
     valid_files = [
         path
         for path in files
@@ -353,7 +351,10 @@ def run_poc(*, wait_seconds: int, watch_downloads_only: bool) -> GmarketPowercli
             write_strategy_summary()
             return result
 
-    detected_files = completed_report_files(profile.download_dir)
+    detected_files = completed_report_files(
+        profile.download_dir,
+        after=None if watch_downloads_only else started_at,
+    )
     selected_file = detected_files[0] if detected_files else None
     if selected_file is None:
         final_status = "needs_user_authentication" if not watch_downloads_only else "failed"

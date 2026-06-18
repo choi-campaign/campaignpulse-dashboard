@@ -6,6 +6,7 @@ import time
 
 
 PARTIAL_SUFFIXES = (".crdownload", ".tmp", ".part")
+REPORT_PATTERNS = ("*.xlsx", "*.xls", "*.csv")
 
 
 def list_completed_downloads(download_dir: Path, pattern: str = "*.xls*", after: datetime | None = None) -> list[Path]:
@@ -19,6 +20,20 @@ def list_completed_downloads(download_dir: Path, pattern: str = "*.xls*", after:
         if after and datetime.fromtimestamp(path.stat().st_mtime) < after:
             continue
         files.append(path)
+    return sorted(files, key=lambda item: item.stat().st_mtime, reverse=True)
+
+
+def list_completed_report_downloads(
+    download_dir: Path,
+    after: datetime | None = None,
+    *,
+    include_demo: bool = False,
+) -> list[Path]:
+    files: set[Path] = set()
+    for pattern in REPORT_PATTERNS:
+        files.update(list_completed_downloads(download_dir, pattern, after))
+    if not include_demo:
+        files = {path for path in files if not path.name.lower().startswith("demo_")}
     return sorted(files, key=lambda item: item.stat().st_mtime, reverse=True)
 
 
