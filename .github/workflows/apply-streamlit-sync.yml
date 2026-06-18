@@ -30,8 +30,19 @@ jobs:
           python-version: "3.12"
           cache: pip
 
-      - name: Verify and apply the reviewed patch
+      - name: Normalize, verify, and apply the reviewed patch
         run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('.github/patches/streamlit_app_sync.patch')
+          content = path.read_text(encoding='utf-8')
+          content = content.replace(
+              '체험 데이터는 상위 50행만 미리보기로 표시합니다. 실제 광고주 데이터는 업로드 후 분석해 주세요.',
+              '체험 데이터는 상위 50행만 미리보기로 표시합니다.',
+          )
+          path.write_text(content, encoding='utf-8')
+          PY
           git apply --check .github/patches/streamlit_app_sync.patch
           git apply .github/patches/streamlit_app_sync.patch
 
