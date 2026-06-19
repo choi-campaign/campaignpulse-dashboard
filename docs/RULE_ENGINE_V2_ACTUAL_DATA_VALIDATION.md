@@ -15,7 +15,7 @@
 ```text
 data/raw/sample_ads.csv
 data/raw/test_ads_full_visible.csv
-data/raw/gmarket_auction/nutirone/README.md
+data/raw/gmarket_auction/sample_advertiser/README.md
 ```
 
 위 파일은 샘플 또는 보관 안내 파일이므로, 실제 광고주 데이터 검증 완료로 볼 수 없습니다.

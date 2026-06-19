@@ -15,7 +15,7 @@
 ```text
 data/raw/sample_ads.csv
 data/raw/test_ads_full_visible.csv
-data/raw/gmarket_auction/nutirone/README.md
+data/raw/gmarket_auction/sample_advertiser/README.md
 ```
 
 따라서 이번 검증은 실제 매체 파일이 아닌 기존 샘플 CSV 2개를 기준으로 수행했습니다.

@@ -13,19 +13,17 @@
 
 광고주 또는 테스트 대상:
 
-- 뉴트리원
+- 비식별 샘플 광고주
 
 ## 2. 전달받은 파일 목록
 
-아래 파일은 현재 사용자 PC의 Google Drive 또는 외부 드라이브 경로에 있습니다.
+아래 파일명은 실제 원본을 공개하지 않기 위해 비식별 예시로 기록합니다.
 
 ```text
-J:/내 드라이브/개발테스트파일/테스트파일/뉴트리원/nutirone_report_AdId_2026031020260607.xlsx
-J:/내 드라이브/개발테스트파일/테스트파일/뉴트리원/nutirone_report_daily_2026031020260607 (1).xlsx
-J:/내 드라이브/개발테스트파일/테스트파일/뉴트리원/nutirone_report_daily_2026031020260607.xlsx
-J:/내 드라이브/개발테스트파일/테스트파일/뉴트리원/nutirone_report_group_2026031020260607.xlsx
-J:/내 드라이브/개발테스트파일/테스트파일/뉴트리원/nutirone_report_monthly_2026031020260607 (1).xlsx
-J:/내 드라이브/개발테스트파일/테스트파일/뉴트리원/nutirone_report_monthly_2026031020260607.xlsx
+sample_report_AdId_YYYYMMDDYYYYMMDD.xlsx
+sample_report_daily_YYYYMMDDYYYYMMDD.xlsx
+sample_report_group_YYYYMMDDYYYYMMDD.xlsx
+sample_report_monthly_YYYYMMDDYYYYMMDD.xlsx
 ```
 
 ## 3. 파일명 기준 추정 리포트 단위
@@ -103,14 +101,14 @@ aimaos/parsers/marketplace/
 
 ## 8. 현재 처리 상태
 
-현재 Codex 작업 환경에서는 `J:` 드라이브 경로에 직접 접근할 수 없습니다.
+현재 작업 환경에서는 사용자의 비공개 원본 저장소에 직접 접근할 수 없습니다.
 
 따라서 실제 시트명, 컬럼명, 샘플 행, 데이터 타입은 아직 확인하지 못했습니다.
 
 다음 단계에서 파일을 아래 워크스페이스 경로로 복사하면 실제 구조 분석을 진행합니다.
 
 ```text
-outputs/aimaos_mvp/data/raw/gmarket_auction/nutirone/
+data/raw/gmarket_auction/sample_advertiser/
 ```
 
 ## 9. 다음 확인 항목

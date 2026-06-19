@@ -229,7 +229,7 @@ def _legacy_profile_frame(media: str) -> pd.DataFrame:
         {
             "일자": "2026-06-01",
             "광고매체": media,
-            "계정명": "뉴트리원",
+            "계정명": "샘플 광고주",
             "캠페인명": f"{media} 전환 점검 캠페인",
             "광고그룹명": "건강식품 주요상품",
             "상품명": "프로바이오틱스 기획전",
@@ -250,7 +250,7 @@ def _legacy_profile_frame(media: str) -> pd.DataFrame:
         {
             "일자": "2026-06-02",
             "광고매체": media,
-            "계정명": "뉴트리원",
+            "계정명": "샘플 광고주",
             "캠페인명": f"{media} 클릭률 점검 캠페인",
             "광고그룹명": "인지도 확장",
             "상품명": "루테인 브랜드검색",
@@ -271,7 +271,7 @@ def _legacy_profile_frame(media: str) -> pd.DataFrame:
         {
             "일자": "2026-06-03",
             "광고매체": media,
-            "계정명": "뉴트리원",
+            "계정명": "샘플 광고주",
             "캠페인명": f"{media} 확대 후보 캠페인",
             "광고그룹명": "고효율 리마케팅",
             "상품명": "콜라겐 베스트셀러",
@@ -292,7 +292,7 @@ def _legacy_profile_frame(media: str) -> pd.DataFrame:
         {
             "일자": "2026-06-04",
             "광고매체": media,
-            "계정명": "뉴트리원",
+            "계정명": "샘플 광고주",
             "캠페인명": f"{media} 안정 운영 캠페인",
             "광고그룹명": "월간 리포트",
             "상품명": "멀티비타민 정기구매",
@@ -317,8 +317,6 @@ def _legacy_profile_frame(media: str) -> pd.DataFrame:
 def _report_version_from_path(path: Path) -> str:
     text = normalize_column_name(str(path))
     if "gmarket auction" in text or "gmarket" in text or "auction" in text or "지마켓" in text or "옥션" in text:
-        return "gmarket_auction_legacy_candidate"
-    if "nutirone report" in text:
         return "gmarket_auction_legacy_candidate"
     return "unknown"
 
@@ -422,11 +420,11 @@ def build_audit_markdown(audits: list[MediaFileAudit]) -> str:
             "",
             "## 7. 현재 확인된 한계",
             "",
-            "- J: 드라이브의 뉴트리원 XLSX 원본은 현재 실행 환경에서 접근 권한이 없어 직접 헤더를 추출하지 못했습니다.",
+            "- 사용자가 별도로 보관한 XLSX 원본은 현재 실행 환경에서 접근 권한이 없어 직접 헤더를 추출하지 못했습니다.",
             "- 따라서 이 리포트의 G마켓/옥션 컬럼은 실제 파일 헤더가 아니라 이전 대화에서 확인된 리포트 구조 기반의 legacy 검증 프로필입니다.",
             "- 장바구니 수는 현재 기본 표준 스키마에 포함되어 있지 않아 실제 파일에 컬럼이 있어도 별도 확장이 필요합니다.",
             "- ROAS, CPC, CTR, CVR은 원본 컬럼이 없더라도 노출수, 클릭수, 광고비, 전환수, 매출이 있으면 계산 가능합니다.",
-            "- 실제 G마켓/옥션 XLSX 파일이 `data/raw/gmarket_auction/nutirone/`에 들어오면 이 리포트는 실제 컬럼 기준으로 다시 생성해야 합니다.",
+            "- 실제 G마켓/옥션 XLSX 파일이 브라우저 업로드 또는 비공개 원본 폴더로 들어오면 이 리포트는 실제 컬럼 기준으로 다시 생성해야 합니다.",
             "",
         ]
     )

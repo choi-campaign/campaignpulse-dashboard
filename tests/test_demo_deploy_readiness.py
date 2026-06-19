@@ -88,12 +88,18 @@ def test_public_docs_do_not_expose_poc_identifiers_or_local_user_paths():
     combined = "\n".join(path.read_text(encoding="utf-8") for path in Path("docs").glob("*.md"))
     forbidden = (
         r"C:\Users\admin",
+        "J:/내 드라이브",
         "cmp-a001-01-000000009693823",
         "CODIMA",
         "더블유아이티",
+        "nutirone",
+        "뉴트리원",
     )
 
     assert not any(value in combined for value in forbidden)
+
+    public_source = Path("aimaos/validators/raw_media_audit.py").read_text(encoding="utf-8")
+    assert not any(value in public_source for value in forbidden)
 
 
 def test_all_primary_streamlit_pages_render_without_exceptions():
