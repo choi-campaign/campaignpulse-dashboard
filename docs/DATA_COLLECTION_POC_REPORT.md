@@ -2,6 +2,13 @@
 
 상태 갱신: 2026-06-19
 
+운영 안정화 반영:
+
+- 네이버 API 요청은 일시적인 네트워크 오류와 HTTP 429/500/502/503/504 응답에 한해 최대 3회 재시도한다.
+- 재시도 횟수와 대기 시간은 `AIMAOS_NAVER_API_MAX_ATTEMPTS`, `AIMAOS_NAVER_API_RETRY_DELAY_SECONDS`로 조정할 수 있다.
+- 최종 수집 결과는 `collection_log`에 `success`, `partial`, `no_data`, `failed`로 기록한다.
+- Customer ID 원문은 수집 로그에 저장하지 않고 비식별 해시를 사용한다.
+
 ## 1. 현재 결론
 
 | 매체 | 현재 판정 | 확인된 범위 |

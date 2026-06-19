@@ -1,19 +1,23 @@
 from datetime import date
 import csv
 import json
+from urllib.error import URLError
 
+from aimaos.collectors import naver_searchad_poc
 from aimaos.collectors.data_collection_poc import build_report
 from aimaos.collectors.naver_searchad_poc import (
     NaverSearchAdCredentials,
     NaverSearchAdPocClient,
-    PocDateRange,
     PocStepResult,
+    PocDateRange,
     all_zero_performance,
     build_stats_attempts,
     extract_stat_rows,
     load_poc_date_range_from_env,
+    write_naver_collection_log,
     write_standard_csv_from_stats,
 )
+from aimaos.storage.collection_log import collection_status_by_media, recent_collection_logs
 
 
 def credentials() -> NaverSearchAdCredentials:
@@ -181,3 +185,72 @@ def test_collection_report_uses_actual_execution_results():
     assert "G마켓: 실제 다운로드 파일 없음" in report
     assert "Customer ID, Access License, Secret Key가 현재 환경에 없어" not in report
     assert "네이버 API 수집은 기술 검증 성공" in report
+
+
+class FakeResponse:
+    status = 200
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *_args):
+        return False
+
+    def read(self):
+        return b'{"data": [{"id": "cmp-1"}]}'
+
+
+def test_naver_client_retries_temporary_network_error(monkeypatch, tmp_path):
+    calls = []
+    sleeps = []
+
+    def fake_urlopen(_request, timeout):
+        calls.append(timeout)
+        if len(calls) == 1:
+            raise URLError("temporary")
+        return FakeResponse()
+
+    monkeypatch.setattr(naver_searchad_poc, "urlopen", fake_urlopen)
+    monkeypatch.setattr(naver_searchad_poc.time, "sleep", sleeps.append)
+    client = NaverSearchAdPocClient(
+        credentials(),
+        tmp_path / "evidence",
+        max_attempts=3,
+        retry_delay_seconds=0.1,
+    )
+
+    ok, payload, status = client.request_json("GET", "/stats")
+
+    assert ok is True
+    assert payload["data"][0]["id"] == "cmp-1"
+    assert status == "HTTP 200"
+    assert len(calls) == 2
+    assert sleeps == [0.1]
+
+
+def test_naver_collection_log_records_no_data_without_raw_customer_id(tmp_path):
+    db_path = tmp_path / "collection_log.sqlite3"
+    context = {
+        "started_at": "2026-06-19 09:00:00",
+        "response_data_rows": 0,
+        "standard_csv_rows": 1,
+        "zero_guard_applied": True,
+        "standard_csv_path": None,
+        "report_paths": {},
+    }
+    results = [
+        PocStepResult("기간 성과 조회", "성공", "stats API 조회 성공"),
+        PocStepResult("AIMAOS 기존 파이프라인 연결", "성공", "파이프라인 연결 성공"),
+        PocStepResult("보고서 자동 생성", "성공", "보고서 생성 성공"),
+    ]
+
+    step = write_naver_collection_log(credentials(), context, results, db_path)
+
+    assert step.status == "성공"
+    rows = recent_collection_logs(10, db_path)
+    assert rows[0]["status"] == "no_data"
+    assert rows[0]["error_code"] == "NAVER_STATS_NO_DATA"
+    assert rows[0]["advertiser_id"].startswith("naver:")
+    assert "demo-customer" not in rows[0]["advertiser_id"]
+    status = collection_status_by_media(db_path)["naver_searchad"]
+    assert status["latest_status"] == "no_data"

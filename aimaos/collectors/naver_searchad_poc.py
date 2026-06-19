@@ -15,11 +15,18 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
+from aimaos.storage.collection_log import (
+    DEFAULT_DB_PATH,
+    CollectionLogRecord,
+    append_collection_log,
+)
+
 
 NAVER_SEARCHAD_BASE_URL = "https://api.searchad.naver.com"
 NAVER_MEDIA_NAME = "네이버 검색광고"
 RICH_STAT_FIELDS = ["clkCnt", "impCnt", "salesAmt", "ctr", "cpc", "avgRnk", "ccnt", "convAmt", "ror"]
 BASIC_STAT_FIELDS = ["clkCnt", "impCnt", "salesAmt", "ctr", "cpc", "avgRnk", "ccnt"]
+RETRYABLE_HTTP_STATUS = {429, 500, 502, 503, 504}
 
 
 @dataclass(frozen=True)
@@ -118,36 +125,63 @@ def parse_env_date(value: str, name: str, warnings: list[str]) -> date | None:
 
 
 class NaverSearchAdPocClient:
-    def __init__(self, credentials: NaverSearchAdCredentials, evidence_dir: Path) -> None:
+    def __init__(
+        self,
+        credentials: NaverSearchAdCredentials,
+        evidence_dir: Path,
+        *,
+        max_attempts: int | None = None,
+        retry_delay_seconds: float | None = None,
+    ) -> None:
         self.credentials = credentials
         self.evidence_dir = evidence_dir
         self.evidence_dir.mkdir(parents=True, exist_ok=True)
+        self.max_attempts = max(
+            1,
+            max_attempts
+            if max_attempts is not None
+            else env_int("AIMAOS_NAVER_API_MAX_ATTEMPTS", 3),
+        )
+        self.retry_delay_seconds = max(
+            0,
+            retry_delay_seconds
+            if retry_delay_seconds is not None
+            else env_float("AIMAOS_NAVER_API_RETRY_DELAY_SECONDS", 0.75),
+        )
 
     def request_json(self, method: str, uri: str, params: dict[str, Any] | None = None) -> tuple[bool, Any, str]:
         query = f"?{urlencode(params, doseq=True)}" if params else ""
         url = f"{NAVER_SEARCHAD_BASE_URL}{uri}{query}"
-        timestamp = str(int(time.time() * 1000))
-        headers = {
-            "Accept": "application/json",
-            "Content-Type": "application/json; charset=UTF-8",
-            "X-Timestamp": timestamp,
-            "X-API-KEY": self.credentials.access_license,
-            "X-Customer": self.credentials.customer_id,
-            "X-Signature": self._signature(timestamp, method, uri),
-        }
-        request = Request(url=url, method=method, headers=headers)
-        try:
-            with urlopen(request, timeout=20) as response:  # noqa: S310
-                body = response.read().decode("utf-8")
-                data = json.loads(body) if body else {}
-                return True, data, f"HTTP {response.status}"
-        except HTTPError as error:
-            body = error.read().decode("utf-8", errors="replace")[:3000]
-            return False, {"status": error.code, "body": body}, f"HTTP {error.code}"
-        except URLError as error:
-            return False, {"reason": str(error.reason)}, "NETWORK_ERROR"
-        except Exception as error:  # noqa: BLE001
-            return False, {"reason": str(error)}, "ERROR"
+        for attempt in range(1, self.max_attempts + 1):
+            timestamp = str(int(time.time() * 1000))
+            headers = {
+                "Accept": "application/json",
+                "Content-Type": "application/json; charset=UTF-8",
+                "X-Timestamp": timestamp,
+                "X-API-KEY": self.credentials.access_license,
+                "X-Customer": self.credentials.customer_id,
+                "X-Signature": self._signature(timestamp, method, uri),
+            }
+            request = Request(url=url, method=method, headers=headers)
+            try:
+                with urlopen(request, timeout=20) as response:  # noqa: S310
+                    body = response.read().decode("utf-8")
+                    data = json.loads(body) if body else {}
+                    return True, data, f"HTTP {response.status}"
+            except HTTPError as error:
+                body = error.read().decode("utf-8", errors="replace")[:3000]
+                if error.code in RETRYABLE_HTTP_STATUS and attempt < self.max_attempts:
+                    time.sleep(self.retry_delay_seconds * attempt)
+                    continue
+                return False, {"status": error.code, "body": body, "attempts": attempt}, f"HTTP {error.code}"
+            except URLError as error:
+                if attempt < self.max_attempts:
+                    time.sleep(self.retry_delay_seconds * attempt)
+                    continue
+                return False, {"reason": str(error.reason), "attempts": attempt}, "NETWORK_ERROR"
+            except Exception as error:  # noqa: BLE001
+                return False, {"reason": str(error), "attempts": attempt}, "ERROR"
+        return False, {"reason": "재시도 횟수를 모두 사용했습니다."}, "ERROR"
 
     def _signature(self, timestamp: str, method: str, uri: str) -> str:
         message = f"{timestamp}.{method}.{uri}"
@@ -162,6 +196,20 @@ class NaverSearchAdPocClient:
         path = self.evidence_dir / f"{name}.json"
         path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
         return str(path)
+
+
+def env_int(name: str, default: int) -> int:
+    try:
+        return int(os.getenv(name, str(default)))
+    except ValueError:
+        return default
+
+
+def env_float(name: str, default: float) -> float:
+    try:
+        return float(os.getenv(name, str(default)))
+    except ValueError:
+        return default
 
 
 def run_naver_searchad_poc(evidence_root: Path) -> list[PocStepResult]:
@@ -281,8 +329,96 @@ def run_naver_searchad_poc(evidence_root: Path) -> list[PocStepResult]:
             ),
         ]
     )
+    results.append(write_naver_collection_log(credentials, context, results))
     write_date_range_stats_report(evidence_root, results, context)
     return results
+
+
+def write_naver_collection_log(
+    credentials: NaverSearchAdCredentials,
+    context: dict[str, Any],
+    results: list[PocStepResult],
+    db_path: Path = DEFAULT_DB_PATH,
+) -> PocStepResult:
+    try:
+        status_by_name = {result.name: result for result in results}
+        stats_step = status_by_name.get("기간 성과 조회")
+        pipeline_step = status_by_name.get("AIMAOS 기존 파이프라인 연결")
+        report_step = status_by_name.get("보고서 자동 생성")
+        response_rows = context.get("response_data_rows")
+        zero_guard = context.get("zero_guard_applied")
+
+        if stats_step is None or stats_step.status in {"실패", "실행 불가"}:
+            status = "failed"
+            error_code = "NAVER_STATS_COLLECTION_FAILED"
+            error_message = stats_step.detail if stats_step else "네이버 성과 조회 결과를 확인할 수 없습니다."
+        elif response_rows == 0 or zero_guard is True:
+            status = "no_data"
+            error_code = "NAVER_STATS_NO_DATA"
+            error_message = "선택 기간의 네이버 광고 성과 데이터가 없습니다."
+        elif pipeline_step and report_step and pipeline_step.status == "성공" and report_step.status == "성공":
+            status = "success"
+            error_code = ""
+            error_message = ""
+        else:
+            status = "partial"
+            error_code = "NAVER_PIPELINE_PARTIAL"
+            error_message = (
+                pipeline_step.detail
+                if pipeline_step and pipeline_step.status != "성공"
+                else "네이버 데이터 수집 후 일부 처리 단계의 확인이 필요합니다."
+            )
+
+        finished_at = datetime.now()
+        started_at = parse_collection_started_at(context.get("started_at")) or finished_at
+        account_hash = hashlib.sha256(credentials.customer_id.encode("utf-8")).hexdigest()[:12]
+        evidence_paths = [
+            Path(path)
+            for path in [
+                context.get("standard_csv_path"),
+                *context.get("report_paths", {}).values(),
+            ]
+            if path
+        ]
+        existing_paths = [path for path in evidence_paths if path.exists() and path.is_file()]
+        storage_used_mb = sum(path.stat().st_size for path in existing_paths) / (1024 * 1024)
+        record = CollectionLogRecord(
+            collection_id=f"naver_{finished_at.strftime('%Y%m%d_%H%M%S_%f')}_{account_hash[:8]}",
+            advertiser_id=f"naver:{account_hash}",
+            media="naver_searchad",
+            started_at=started_at.strftime("%Y-%m-%d %H:%M:%S"),
+            finished_at=finished_at.strftime("%Y-%m-%d %H:%M:%S"),
+            status=status,
+            rows_collected=int(context.get("standard_csv_rows") or response_rows or 0),
+            file_count=len(existing_paths),
+            storage_used_mb=round(storage_used_mb, 4),
+            error_code=error_code,
+            error_message=error_message,
+        )
+        append_collection_log(record, db_path)
+        return PocStepResult(
+            "수집 로그 기록",
+            "성공",
+            f"네이버 수집 결과를 {status} 상태로 기록했습니다.",
+            str(db_path),
+        )
+    except Exception as error:  # noqa: BLE001
+        return PocStepResult(
+            "수집 로그 기록",
+            "실패",
+            f"네이버 수집 결과 로그 기록 중 오류: {error}",
+            str(db_path),
+        )
+
+
+def parse_collection_started_at(value: object) -> datetime | None:
+    text = str(value or "").strip()
+    if not text:
+        return None
+    try:
+        return datetime.fromisoformat(text)
+    except ValueError:
+        return None
 
 
 def format_date_range(date_range: PocDateRange) -> str:
