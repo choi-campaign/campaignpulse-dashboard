@@ -963,6 +963,10 @@ def status_style(status: str) -> dict[str, str]:
     return DATA_STATUS_STYLES.get(status, DATA_STATUS_STYLES["연결 안됨"])
 
 
+def channel_needs_data_attention(status: object) -> bool:
+    return str(status) in {"주의", "오래됨", "연결 안됨"}
+
+
 def data_status_badge(status: str) -> str:
     style = status_style(status)
     return (
@@ -1159,7 +1163,9 @@ def render_integrated_dashboard() -> None:
     status = collect_data_status_snapshot()
     stats = sidebar_command_center_stats()
     reports = collect_report_records(BASE_DIR / "data" / "reports")
-    non_fresh_channels = sum(1 for channel in status["channels"] if channel["status"] != "최신")
+    non_fresh_channels = sum(
+        1 for channel in status["channels"] if channel_needs_data_attention(channel["status"])
+    )
 
     st.title("종합 대시보드")
     st.caption("캠페인펄스의 전체 운영 상태를 한 화면에서 확인합니다.")
@@ -1194,7 +1200,7 @@ def render_integrated_dashboard() -> None:
     st.subheader("데이터 상태 요약")
     status_cards = [
         ("전체 상태", str(status["overall_status"]), "최신 데이터 기준으로 판단합니다."),
-        ("마지막 수집", format_status_time(status["last_collection_at"]), "최근 데이터가 들어온 시각"),
+        ("마지막 수집 시도", format_status_time(status["last_collection_at"]), "최근 수집 작업이 끝난 시각"),
         ("마지막 분석", format_status_time(status["last_analysis_at"]), "보고서 또는 분석 결과가 갱신된 시각"),
         ("최근 실패 원인", str(status["failure_reason"]), "수집 실패가 있으면 원인을 먼저 확인합니다."),
     ]
@@ -1284,7 +1290,7 @@ def render_data_status_center() -> None:
     st.markdown(
         '<div class="aima-section-lead">'
         "캠페인펄스는 최신 데이터가 확보된 뒤 우선 처리 이슈와 보고서를 신뢰할 수 있습니다. "
-        "먼저 데이터 연결 상태와 마지막 수집 시각을 확인해 주세요."
+        "먼저 데이터 연결 상태와 마지막 수집 시도, 마지막 성공 시각을 확인해 주세요."
         "</div>",
         unsafe_allow_html=True,
     )
@@ -1293,8 +1299,9 @@ def render_data_status_center() -> None:
     with col1:
         st.markdown(
             '<div class="aima-data-status-hero">'
-            '<div class="aima-data-status-title">마지막 데이터 수집 시각</div>'
+            '<div class="aima-data-status-title">마지막 수집 시도 시각</div>'
             f'<div class="aima-data-status-value">{escape(format_status_time(status["last_collection_at"]))}</div>'
+            '<div class="aima-summary-note">성공과 실패를 포함한 최근 수집 작업 종료 시각</div>'
             "</div>",
             unsafe_allow_html=True,
         )
@@ -1387,7 +1394,7 @@ def render_channel_status_table(channels: object) -> str:
     rows = [
         '<div class="aima-channel-table">',
         '<div class="aima-channel-row aima-channel-head">'
-        "<div>매체</div><div>연결 상태</div><div>마지막 수집</div><div>마지막 확인</div><div>상태</div>"
+        "<div>매체</div><div>연결 상태</div><div>마지막 성공 수집</div><div>마지막 확인</div><div>상태</div>"
         "</div>",
     ]
     for channel in channels:
@@ -3616,7 +3623,11 @@ def render_command_center_sidebar() -> str:
     render_demo_data_sidebar_control()
 
     badges = {
-        "종합 대시보드": sum(1 for channel in collect_data_status_snapshot()["channels"] if channel["status"] != "최신"),
+        "종합 대시보드": sum(
+            1
+            for channel in collect_data_status_snapshot()["channels"]
+            if channel_needs_data_attention(channel["status"])
+        ),
         "우선 처리 이슈": stats["today_issues"],
         "운영 현황": stats["today_issues"],
         "광고 성과 분석": stats["raw_files"],

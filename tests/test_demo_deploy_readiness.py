@@ -84,6 +84,14 @@ def test_light_and_dark_mode_button_contrast_is_explicit():
     assert "color: var(--cp-text) !important;" in source
 
 
+def test_data_status_ui_distinguishes_demo_and_collection_attempts():
+    source = STREAMLIT_APP.read_text(encoding="utf-8")
+
+    assert 'return str(status) in {"주의", "오래됨", "연결 안됨"}' in source
+    assert "마지막 수집 시도" in source
+    assert "성공과 실패를 포함한 최근 수집 작업 종료 시각" in source
+    assert "마지막 성공 수집" in source
+
 def test_public_docs_do_not_expose_poc_identifiers_or_local_user_paths():
     combined = "\n".join(path.read_text(encoding="utf-8") for path in Path("docs").glob("*.md"))
     forbidden = (
