@@ -61,6 +61,7 @@ class MarketplacePocResult:
     pipeline_status: str = "not_run"
     action_issue_count: int | None = None
     report_paths: dict[str, str] = field(default_factory=dict)
+    audit_row_count: int = 0
 
 
 def profile_dirs(project_root: Path, media_key: str, profile_version: str) -> tuple[Path, Path]:
@@ -77,4 +78,3 @@ def ensure_writable_directory(path: Path) -> tuple[bool, str]:
         return True, str(path)
     except Exception as error:  # noqa: BLE001
         return False, str(error)
-

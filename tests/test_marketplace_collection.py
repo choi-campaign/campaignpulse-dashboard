@@ -241,3 +241,47 @@ def test_manual_marketplace_attempt_without_download_records_failure(tmp_path):
     assert row["error_code"] == "DOWNLOAD_FILE_NOT_FOUND"
     status = collection_status_by_media(db_path)["auction"]
     assert status["last_failure_at"] == datetime(2026, 6, 19, 10, 5, 0)
+
+
+def test_marketplace_success_log_preserves_rows_and_file_size(tmp_path):
+    db_path = tmp_path / "collection_log.sqlite3"
+    report_file = tmp_path / "auction_report.csv"
+    report_file.write_text(
+        "date,cost\n" + ("2026-06-19,1000\n" * 100),
+        encoding="utf-8",
+    )
+    profile = MarketplaceProfile(
+        media_key="auction",
+        media_name="옥션",
+        profile_version="legacy",
+        login_url_env_key="TEST_LOGIN_URL",
+        report_url_env_key="TEST_REPORT_URL",
+        default_login_url="https://example.com/login",
+        default_report_url="https://example.com/report",
+        download_dir=tmp_path / "downloads",
+        browser_profile_dir=tmp_path / "browser",
+        status=PROFILE_READY,
+    )
+    result = MarketplacePocResult(
+        profile=profile,
+        checked_at=datetime(2026, 6, 19, 11, 5, 0),
+        steps=[],
+        detected_files=[report_file],
+        audit_status="성공",
+        pipeline_status="success",
+        action_issue_count=2,
+        report_paths={"excel": str(tmp_path / "analysis.xlsx")},
+        audit_row_count=37,
+    )
+
+    marketplace_collection_poc.record_marketplace_collection_result(
+        result,
+        datetime(2026, 6, 19, 11, 0, 0),
+        db_path,
+    )
+
+    row = recent_collection_logs(1, db_path)[0]
+    assert row["status"] == "success"
+    assert row["rows_collected"] == 37
+    assert row["file_count"] == 1
+    assert row["storage_used_mb"] > 0

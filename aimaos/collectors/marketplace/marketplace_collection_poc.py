@@ -143,7 +143,7 @@ def record_marketplace_collection_result(
             started_at=started_at.strftime("%Y-%m-%d %H:%M:%S"),
             finished_at=finished_at.strftime("%Y-%m-%d %H:%M:%S"),
             status=status,
-            rows_collected=0,
+            rows_collected=result.audit_row_count,
             file_count=len(result.detected_files),
             storage_used_mb=round(file_size / 1024 / 1024, 4),
             error_code=error_code,
@@ -437,6 +437,7 @@ def run_audit_and_pipeline(
     detected_files: list[Path],
 ) -> MarketplacePocResult:
     audit_status = "not_run"
+    audit_row_count = 0
     pipeline_status = "not_run"
     action_issue_count: int | None = None
     report_paths: dict[str, str] = {}
@@ -445,6 +446,7 @@ def run_audit_and_pipeline(
     try:
         audit = audit_media_file(target_file)
         audit_status = audit.load_status
+        audit_row_count = audit.row_count
         steps.append(PocStep("raw_media_audit 연결", "success", audit.load_status, str(target_file)))
     except Exception as error:  # noqa: BLE001
         steps.append(PocStep("raw_media_audit 연결", "failed", str(error), str(target_file)))
@@ -474,6 +476,7 @@ def run_audit_and_pipeline(
         pipeline_status=pipeline_status,
         action_issue_count=action_issue_count,
         report_paths=report_paths,
+        audit_row_count=audit_row_count,
     )
 
 
@@ -510,6 +513,7 @@ def write_json_evidence(results: list[MarketplacePocResult], browser_executable:
                 "steps": [asdict(step) for step in result.steps],
                 "detected_files": [str(path) for path in result.detected_files],
                 "audit_status": result.audit_status,
+                "audit_row_count": result.audit_row_count,
                 "pipeline_status": result.pipeline_status,
                 "action_issue_count": result.action_issue_count,
                 "report_paths": result.report_paths,

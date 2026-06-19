@@ -85,6 +85,8 @@ G마켓·옥션 수동 수집 시도는 선택한 profile만 기록한다.
 - 파일 감지 후 일부 처리 단계 확인 필요: `partial`
 - 다운로드 파일 미감지 또는 진단 실패: `failed`
 
+성공 또는 부분 성공 로그에는 원본 진단에서 확인한 실제 행 수와 감지 파일 용량을 함께 기록한다.
+
 `needs_user_authentication`, `blocked_by_environment` 같은 세부 상황은 DB 상태값으로 저장하지 않고 `error_code`와 `error_message`에 보존한다. 광고센터 진입만 성공한 경우에는 수집 성공으로 기록하지 않는다.
 
 ## 검증
