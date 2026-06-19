@@ -54,7 +54,7 @@ from aimaos.validators.raw_media_audit import (
     audit_media_file,
 )
 from aimaos.storage.retention_cleanup import build_cleanup_plan
-from aimaos.storage.collection_log import collection_status_by_media
+from aimaos.storage.collection_log import collection_status_by_media, latest_collection_event_times
 
 
 REPO_ROOT = PROJECT_ROOT.parents[1] if len(PROJECT_ROOT.parents) > 1 else PROJECT_ROOT
@@ -978,6 +978,7 @@ def collect_data_status_snapshot() -> dict[str, object]:
     report_root = BASE_DIR / "data" / "reports"
     demo_root = BASE_DIR / "samples" / "demo_data"
     collection_log_status = collection_status_by_media()
+    logged_last_success_at, logged_last_failure_at = latest_collection_event_times(collection_log_status)
 
     last_collection_at = latest_file_mtime(collection_root, ("*.csv", "*.xlsx", "*.xls"))
     raw_latest_at = latest_file_mtime(raw_root, ("*.csv", "*.xlsx", "*.xls"))
@@ -1128,6 +1129,10 @@ def collect_data_status_snapshot() -> dict[str, object]:
         ]
         last_success_at = max(success_times) if success_times else None
         last_failure_at = max(failure_times) if failure_times else None
+        if logged_last_success_at and (last_success_at is None or logged_last_success_at > last_success_at):
+            last_success_at = logged_last_success_at
+        if logged_last_failure_at and (last_failure_at is None or logged_last_failure_at > last_failure_at):
+            last_failure_at = logged_last_failure_at
         failure_reasons = [
             f'{channel["media"]}: {channel["failure_reason"]}'
             for channel in channels

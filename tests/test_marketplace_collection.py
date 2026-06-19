@@ -17,6 +17,7 @@ from aimaos.storage.collection_log import (
     CollectionLogRecord,
     append_collection_log,
     collection_status_by_media,
+    latest_collection_event_times,
     recent_collection_logs,
 )
 
@@ -285,3 +286,25 @@ def test_marketplace_success_log_preserves_rows_and_file_size(tmp_path):
     assert row["rows_collected"] == 37
     assert row["file_count"] == 1
     assert row["storage_used_mb"] > 0
+
+
+def test_latest_collection_event_times_keep_previous_success_after_failure():
+    previous_success = datetime(2026, 6, 18, 9, 0, 0)
+    latest_failure = datetime(2026, 6, 19, 9, 0, 0)
+    status_by_media = {
+        "naver_searchad": {
+            "latest_status": "no_data",
+            "last_success_at": previous_success,
+            "last_failure_at": latest_failure,
+        },
+        "gmarket": {
+            "latest_status": "failed",
+            "last_success_at": None,
+            "last_failure_at": datetime(2026, 6, 19, 8, 0, 0),
+        },
+    }
+
+    last_success_at, last_failure_at = latest_collection_event_times(status_by_media)
+
+    assert last_success_at == previous_success
+    assert last_failure_at == latest_failure

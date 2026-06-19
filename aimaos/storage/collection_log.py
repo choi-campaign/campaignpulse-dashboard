@@ -180,6 +180,24 @@ def collection_status_by_media(
     return summary
 
 
+def latest_collection_event_times(
+    status_by_media: dict[str, dict[str, object]],
+) -> tuple[datetime | None, datetime | None]:
+    success_times = [
+        entry.get("last_success_at")
+        for entry in status_by_media.values()
+        if isinstance(entry.get("last_success_at"), datetime)
+    ]
+    failure_times = [
+        entry.get("last_failure_at")
+        for entry in status_by_media.values()
+        if isinstance(entry.get("last_failure_at"), datetime)
+    ]
+    return (
+        max(success_times) if success_times else None,
+        max(failure_times) if failure_times else None,
+    )
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Prepare the AIMAOS collection log database.")
     parser.add_argument("--db-path", type=Path, default=DEFAULT_DB_PATH)
