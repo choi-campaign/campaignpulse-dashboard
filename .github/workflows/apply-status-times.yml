@@ -3,7 +3,7 @@ name: Apply data status event times
 on:
   push:
     paths:
-      - .github/patches/status-times.zip.b64
+      - .github/patches/status-times.trigger
   workflow_dispatch:
 
 permissions:
@@ -16,13 +16,104 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Decode and apply patch
+      - name: Apply source updates
         shell: bash
         run: |
-          base64 --decode .github/patches/status-times.zip.b64 > /tmp/status-times.zip
-          unzip -p /tmp/status-times.zip > /tmp/status-times.patch
-          git apply --check /tmp/status-times.patch
-          git apply /tmp/status-times.patch
+          python - <<'PY'
+          from pathlib import Path
+
+          def replace_once(path_text: str, old: str, new: str) -> None:
+              path = Path(path_text)
+              text = path.read_text(encoding="utf-8")
+              if new in text:
+                  return
+              if old not in text:
+                  raise SystemExit(f"expected source text missing: {path_text}")
+              path.write_text(text.replace(old, new, 1), encoding="utf-8")
+
+          replace_once(
+              "aimaos/app/streamlit_app.py",
+              "from aimaos.storage.collection_log import collection_status_by_media",
+              "from aimaos.storage.collection_log import collection_status_by_media, latest_collection_event_times",
+          )
+          replace_once(
+              "aimaos/app/streamlit_app.py",
+              "    collection_log_status = collection_status_by_media()\n\n    last_collection_at =",
+              "    collection_log_status = collection_status_by_media()\n    logged_last_success_at, logged_last_failure_at = latest_collection_event_times(collection_log_status)\n\n    last_collection_at =",
+          )
+          replace_once(
+              "aimaos/app/streamlit_app.py",
+              "        last_success_at = max(success_times) if success_times else None\n        last_failure_at = max(failure_times) if failure_times else None\n        failure_reasons = [",
+              "        last_success_at = max(success_times) if success_times else None\n        last_failure_at = max(failure_times) if failure_times else None\n        if logged_last_success_at and (last_success_at is None or logged_last_success_at > last_success_at):\n            last_success_at = logged_last_success_at\n        if logged_last_failure_at and (last_failure_at is None or logged_last_failure_at > last_failure_at):\n            last_failure_at = logged_last_failure_at\n        failure_reasons = [",
+          )
+
+          helper = '''def latest_collection_event_times(
+              status_by_media: dict[str, dict[str, object]],
+          ) -> tuple[datetime | None, datetime | None]:
+              success_times = [
+                  entry.get("last_success_at")
+                  for entry in status_by_media.values()
+                  if isinstance(entry.get("last_success_at"), datetime)
+              ]
+              failure_times = [
+                  entry.get("last_failure_at")
+                  for entry in status_by_media.values()
+                  if isinstance(entry.get("last_failure_at"), datetime)
+              ]
+              return (
+                  max(success_times) if success_times else None,
+                  max(failure_times) if failure_times else None,
+              )
+
+
+          '''
+          replace_once(
+              "aimaos/storage/collection_log.py",
+              "def main() -> None:\n",
+              helper + "def main() -> None:\n",
+          )
+          replace_once(
+              "tests/test_marketplace_collection.py",
+              "    collection_status_by_media,\n    recent_collection_logs,",
+              "    collection_status_by_media,\n    latest_collection_event_times,\n    recent_collection_logs,",
+          )
+
+          test_path = Path("tests/test_marketplace_collection.py")
+          test_text = test_path.read_text(encoding="utf-8")
+          test_name = "def test_latest_collection_event_times_keep_previous_success_after_failure():"
+          if test_name not in test_text:
+              test_text += '''
+
+
+def test_latest_collection_event_times_keep_previous_success_after_failure():
+    previous_success = datetime(2026, 6, 18, 9, 0, 0)
+    latest_failure = datetime(2026, 6, 19, 9, 0, 0)
+    status_by_media = {
+        "naver_searchad": {
+            "latest_status": "no_data",
+            "last_success_at": previous_success,
+            "last_failure_at": latest_failure,
+        },
+        "gmarket": {
+            "latest_status": "failed",
+            "last_success_at": None,
+            "last_failure_at": datetime(2026, 6, 19, 8, 0, 0),
+        },
+    }
+
+    last_success_at, last_failure_at = latest_collection_event_times(status_by_media)
+
+    assert last_success_at == previous_success
+    assert last_failure_at == latest_failure
+'''
+              test_path.write_text(test_text, encoding="utf-8")
+
+          replace_once(
+              "docs/DATA_STATUS_CENTER_REFACTOR.md",
+              "4. 매체별 상태는 `collection_log`의 가장 최근 시도를 우선 반영한다.\n5. 데모 모드에서는 네이버, G마켓, 옥션, 11번가를 `데모`로 명확히 표시한다.\n6. 실제 업로드 데이터가 있으면 데모보다 업로드 결과를 우선한다.",
+              "4. 매체별 상태는 `collection_log`의 가장 최근 시도를 우선 반영한다.\n5. 최근 시도가 실패 또는 데이터 없음이어도 과거의 마지막 성공 시각과 최근 실패 시각은 각각 보존한다.\n6. 데모 모드에서는 네이버, G마켓, 옥션, 11번가를 `데모`로 명확히 표시한다.\n7. 실제 업로드 데이터가 있으면 데모보다 업로드 결과를 우선한다.",
+          )
+          PY
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
