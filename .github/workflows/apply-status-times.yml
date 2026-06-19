@@ -1,0 +1,40 @@
+name: Apply data status event times
+
+on:
+  push:
+    paths:
+      - .github/patches/status-times.zip.b64
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply-and-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Decode and apply patch
+        shell: bash
+        run: |
+          base64 --decode .github/patches/status-times.zip.b64 > /tmp/status-times.zip
+          unzip -p /tmp/status-times.zip > /tmp/status-times.patch
+          git apply --check /tmp/status-times.patch
+          git apply /tmp/status-times.patch
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: python -m pip install -r requirements-dev.txt
+      - run: python -m compileall aimaos tests
+      - run: python -m pytest tests -q
+      - name: Commit verified changes
+        shell: bash
+        run: |
+          git config user.name "CampaignPulse CI"
+          git config user.email "actions@users.noreply.github.com"
+          git add aimaos/storage/collection_log.py aimaos/app/streamlit_app.py tests/test_marketplace_collection.py docs/DATA_STATUS_CENTER_REFACTOR.md
+          git commit -m "Preserve collection success and failure times"
+          git push origin HEAD:main
