@@ -92,6 +92,20 @@ def test_data_status_ui_distinguishes_demo_and_collection_attempts():
     assert "성공과 실패를 포함한 최근 수집 작업 종료 시각" in source
     assert "마지막 성공 수집" in source
 
+
+def test_demo_dashboard_counts_only_channels_that_need_attention():
+    app = AppTest.from_file(str(STREAMLIT_APP), default_timeout=60).run(timeout=60)
+    dashboard_cards = [str(item.value) for item in app.get("markdown")]
+
+    assert any(
+        '<div class="aima-summary-label">데이터 확인 필요</div>'
+        '<div class="aima-summary-value">1</div>' in card
+        for card in dashboard_cards
+    )
+    assert any("마지막 수집 시도" in card for card in dashboard_cards)
+    assert len(app.exception) == 0
+
+
 def test_public_docs_do_not_expose_poc_identifiers_or_local_user_paths():
     combined = "\n".join(path.read_text(encoding="utf-8") for path in Path("docs").glob("*.md"))
     forbidden = (
