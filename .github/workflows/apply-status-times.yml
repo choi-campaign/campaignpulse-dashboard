@@ -47,30 +47,31 @@ jobs:
               "        last_success_at = max(success_times) if success_times else None\n        last_failure_at = max(failure_times) if failure_times else None\n        if logged_last_success_at and (last_success_at is None or logged_last_success_at > last_success_at):\n            last_success_at = logged_last_success_at\n        if logged_last_failure_at and (last_failure_at is None or logged_last_failure_at > last_failure_at):\n            last_failure_at = logged_last_failure_at\n        failure_reasons = [",
           )
 
-          helper = '''def latest_collection_event_times(
-              status_by_media: dict[str, dict[str, object]],
-          ) -> tuple[datetime | None, datetime | None]:
-              success_times = [
-                  entry.get("last_success_at")
-                  for entry in status_by_media.values()
-                  if isinstance(entry.get("last_success_at"), datetime)
-              ]
-              failure_times = [
-                  entry.get("last_failure_at")
-                  for entry in status_by_media.values()
-                  if isinstance(entry.get("last_failure_at"), datetime)
-              ]
-              return (
-                  max(success_times) if success_times else None,
-                  max(failure_times) if failure_times else None,
-              )
-
-
-          '''
+          helper_lines = [
+              "def latest_collection_event_times(",
+              "    status_by_media: dict[str, dict[str, object]],",
+              ") -> tuple[datetime | None, datetime | None]:",
+              "    success_times = [",
+              "        entry.get(\"last_success_at\")",
+              "        for entry in status_by_media.values()",
+              "        if isinstance(entry.get(\"last_success_at\"), datetime)",
+              "    ]",
+              "    failure_times = [",
+              "        entry.get(\"last_failure_at\")",
+              "        for entry in status_by_media.values()",
+              "        if isinstance(entry.get(\"last_failure_at\"), datetime)",
+              "    ]",
+              "    return (",
+              "        max(success_times) if success_times else None,",
+              "        max(failure_times) if failure_times else None,",
+              "    )",
+              "",
+              "",
+          ]
           replace_once(
               "aimaos/storage/collection_log.py",
               "def main() -> None:\n",
-              helper + "def main() -> None:\n",
+              "\n".join(helper_lines) + "def main() -> None:\n",
           )
           replace_once(
               "tests/test_marketplace_collection.py",
@@ -82,31 +83,32 @@ jobs:
           test_text = test_path.read_text(encoding="utf-8")
           test_name = "def test_latest_collection_event_times_keep_previous_success_after_failure():"
           if test_name not in test_text:
-              test_text += '''
-
-
-def test_latest_collection_event_times_keep_previous_success_after_failure():
-    previous_success = datetime(2026, 6, 18, 9, 0, 0)
-    latest_failure = datetime(2026, 6, 19, 9, 0, 0)
-    status_by_media = {
-        "naver_searchad": {
-            "latest_status": "no_data",
-            "last_success_at": previous_success,
-            "last_failure_at": latest_failure,
-        },
-        "gmarket": {
-            "latest_status": "failed",
-            "last_success_at": None,
-            "last_failure_at": datetime(2026, 6, 19, 8, 0, 0),
-        },
-    }
-
-    last_success_at, last_failure_at = latest_collection_event_times(status_by_media)
-
-    assert last_success_at == previous_success
-    assert last_failure_at == latest_failure
-'''
-              test_path.write_text(test_text, encoding="utf-8")
+              test_lines = [
+                  "",
+                  "",
+                  test_name,
+                  "    previous_success = datetime(2026, 6, 18, 9, 0, 0)",
+                  "    latest_failure = datetime(2026, 6, 19, 9, 0, 0)",
+                  "    status_by_media = {",
+                  "        \"naver_searchad\": {",
+                  "            \"latest_status\": \"no_data\",",
+                  "            \"last_success_at\": previous_success,",
+                  "            \"last_failure_at\": latest_failure,",
+                  "        },",
+                  "        \"gmarket\": {",
+                  "            \"latest_status\": \"failed\",",
+                  "            \"last_success_at\": None,",
+                  "            \"last_failure_at\": datetime(2026, 6, 19, 8, 0, 0),",
+                  "        },",
+                  "    }",
+                  "",
+                  "    last_success_at, last_failure_at = latest_collection_event_times(status_by_media)",
+                  "",
+                  "    assert last_success_at == previous_success",
+                  "    assert last_failure_at == latest_failure",
+                  "",
+              ]
+              test_path.write_text(test_text + "\n".join(test_lines), encoding="utf-8")
 
           replace_once(
               "docs/DATA_STATUS_CENTER_REFACTOR.md",
