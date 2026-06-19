@@ -159,14 +159,19 @@ def build_result(
 
 
 def record_collection_log(result: GmarketPowerclickPocResult, started_at: datetime) -> None:
+    normalized_status = (
+        result.final_status
+        if result.final_status in {"success", "partial", "no_data", "failed"}
+        else "failed"
+    )
     append_collection_log(
         CollectionLogRecord(
             collection_id=result.collection_id,
-            advertiser_id="actual_account_pending",
+            advertiser_id="gmarket:account_pending",
             media="gmarket",
             started_at=started_at.strftime("%Y-%m-%d %H:%M:%S"),
             finished_at=result.checked_at,
-            status=result.final_status,
+            status=normalized_status,
             rows_collected=result.audit_row_count,
             file_count=len(result.detected_files),
             storage_used_mb=round(result.file_size / 1024 / 1024, 4),

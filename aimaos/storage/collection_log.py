@@ -134,7 +134,7 @@ def collection_status_by_media(
         failures = [
             row
             for row in ordered
-            if str(row.get("status", "")).lower() in {"failed", "partial", "no_data"}
+            if str(row.get("status", "")).lower() not in {"", "success"}
         ]
         window_rows = [
             row

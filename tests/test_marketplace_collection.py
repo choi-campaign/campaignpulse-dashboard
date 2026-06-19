@@ -8,7 +8,11 @@ from aimaos.collectors.marketplace.download_watcher import (
 )
 from aimaos.collectors.marketplace.gmarket_computer_use_download_poc import completed_report_files
 from aimaos.collectors.marketplace import marketplace_collection_poc
-from aimaos.collectors.marketplace.base_collector import MarketplaceProfile, PROFILE_READY
+from aimaos.collectors.marketplace.base_collector import (
+    MarketplacePocResult,
+    MarketplaceProfile,
+    PROFILE_READY,
+)
 from aimaos.storage.collection_log import (
     CollectionLogRecord,
     append_collection_log,
@@ -201,3 +205,39 @@ def test_collection_status_uses_latest_attempt_and_preserves_prior_success(tmp_p
     assert gmarket["last_failure_at"] == datetime(2026, 6, 18, 10, 1, 0)
     assert gmarket["error_code"] == "LOGIN_REQUIRED"
     assert gmarket["success_rate_30d"] == 50
+
+
+def test_manual_marketplace_attempt_without_download_records_failure(tmp_path):
+    db_path = tmp_path / "collection_log.sqlite3"
+    started_at = datetime(2026, 6, 19, 10, 0, 0)
+    profile = MarketplaceProfile(
+        media_key="auction",
+        media_name="옥션",
+        profile_version="legacy",
+        login_url_env_key="TEST_LOGIN_URL",
+        report_url_env_key="TEST_REPORT_URL",
+        default_login_url="https://example.com/login",
+        default_report_url="https://example.com/report",
+        download_dir=tmp_path / "downloads",
+        browser_profile_dir=tmp_path / "browser",
+        status=PROFILE_READY,
+    )
+    result = MarketplacePocResult(
+        profile=profile,
+        checked_at=datetime(2026, 6, 19, 10, 5, 0),
+        steps=[],
+        detected_files=[],
+    )
+
+    marketplace_collection_poc.record_marketplace_collection_result(
+        result,
+        started_at,
+        db_path,
+    )
+
+    row = recent_collection_logs(1, db_path)[0]
+    assert row["media"] == "auction"
+    assert row["status"] == "failed"
+    assert row["error_code"] == "DOWNLOAD_FILE_NOT_FOUND"
+    status = collection_status_by_media(db_path)["auction"]
+    assert status["last_failure_at"] == datetime(2026, 6, 19, 10, 5, 0)

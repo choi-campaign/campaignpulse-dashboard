@@ -32,6 +32,11 @@ from aimaos.collectors.marketplace.profiles import (
     gmarket_next,
 )
 from aimaos.pipeline import run_analysis_pipeline
+from aimaos.storage.collection_log import (
+    DEFAULT_DB_PATH,
+    CollectionLogRecord,
+    append_collection_log,
+)
 from aimaos.validators.raw_media_audit import audit_media_file
 
 
@@ -57,6 +62,7 @@ def load_marketplace_profiles(project_root: Path) -> list[MarketplaceProfile]:
 def run_marketplace_download_poc(
     project_root: Path = PROJECT_ROOT,
     downloaded_after: datetime | None = None,
+    attempted_profile_id: str | None = None,
 ) -> list[MarketplacePocResult]:
     load_dotenv(project_root / ".env")
     checked_at = datetime.now()
@@ -81,9 +87,70 @@ def run_marketplace_download_poc(
         )
         for profile in profiles
     ]
+    if attempted_profile_id:
+        attempted_result = next(
+            (result for result in results if result.profile.profile_id == attempted_profile_id),
+            None,
+        )
+        if attempted_result is not None:
+            record_marketplace_collection_result(
+                attempted_result,
+                downloaded_after or checked_at,
+            )
     write_json_evidence(results, browser_smoke.browser_executable)
     REPORT_PATH.write_text(build_report(results, browser_smoke), encoding="utf-8")
     return results
+
+
+def record_marketplace_collection_result(
+    result: MarketplacePocResult,
+    started_at: datetime,
+    db_path: Path = DEFAULT_DB_PATH,
+) -> None:
+    if result.detected_files and result.pipeline_status == "success":
+        status = "success"
+        error_code = ""
+        error_message = ""
+    elif result.detected_files and result.audit_status == "성공":
+        status = "partial"
+        error_code = "MARKETPLACE_PIPELINE_PARTIAL"
+        error_message = "리포트 파일은 감지했지만 분석 또는 보고서 생성 단계의 확인이 필요합니다."
+    elif result.detected_files:
+        status = "failed"
+        error_code = "MARKETPLACE_AUDIT_FAILED"
+        error_message = "리포트 파일은 감지했지만 원본 파일 진단에 실패했습니다."
+    else:
+        status = "failed"
+        error_code = "DOWNLOAD_FILE_NOT_FOUND"
+        error_message = (
+            f"{result.profile.media_name} 리포트 다운로드 파일이 감지되지 않았습니다. "
+            "로그인, 조회 기간, 다운로드 완료 여부를 확인해 주세요."
+        )
+
+    finished_at = result.checked_at
+    file_size = sum(
+        path.stat().st_size
+        for path in result.detected_files
+        if path.exists() and path.is_file()
+    )
+    append_collection_log(
+        CollectionLogRecord(
+            collection_id=(
+                f"{result.profile.media_key}_{started_at.strftime('%Y%m%d_%H%M%S_%f')}"
+            ),
+            advertiser_id=f"{result.profile.media_key}:account_pending",
+            media=result.profile.media_key,
+            started_at=started_at.strftime("%Y-%m-%d %H:%M:%S"),
+            finished_at=finished_at.strftime("%Y-%m-%d %H:%M:%S"),
+            status=status,
+            rows_collected=0,
+            file_count=len(result.detected_files),
+            storage_used_mb=round(file_size / 1024 / 1024, 4),
+            error_code=error_code,
+            error_message=error_message,
+        ),
+        db_path,
+    )
 
 
 def run_manual_profile_session(profile_id: str, wait_seconds: int, project_root: Path = PROJECT_ROOT) -> None:
@@ -676,5 +743,8 @@ if __name__ == "__main__":
     if args.open_profile:
         downloaded_after = datetime.now()
         run_manual_profile_session(args.open_profile, args.wait_seconds)
-    run_marketplace_download_poc(downloaded_after=downloaded_after)
+    run_marketplace_download_poc(
+        downloaded_after=downloaded_after,
+        attempted_profile_id=args.open_profile,
+    )
     print(REPORT_PATH)
