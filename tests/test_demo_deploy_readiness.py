@@ -82,6 +82,8 @@ def test_light_and_dark_mode_button_contrast_is_explicit():
     assert '[data-testid="stMain"] .stButton > button[kind="secondary"]' in source
     assert "background: var(--cp-white) !important;" in source
     assert "color: var(--cp-text) !important;" in source
+    assert 'style="background: {background}; color: var(--cp-text);"' in source
+    assert 'style="background: {hex_to_rgba(color, 0.16)}; color: var(--cp-text);"' in source
 
 
 def test_data_status_ui_distinguishes_demo_and_collection_attempts():

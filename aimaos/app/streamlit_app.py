@@ -2492,7 +2492,7 @@ def media_chip(platform: str) -> str:
     style = media_style(platform)
     background = hex_to_rgba(style["color"], 0.18)
     return (
-        f'<span class="aima-media-chip" style="background: {background}; color: {style["text"]};">'
+        f'<span class="aima-media-chip" style="background: {background}; color: var(--cp-text);">'
         f'<span class="aima-media-dot" style="background: {style["color"]};"></span>'
         f'{escape(platform)} <span style="opacity: 0.78;">{escape(style["short"])}</span>'
         "</span>"
@@ -3211,7 +3211,7 @@ def render_association_asset_status(channels: pd.DataFrame | None = None) -> Non
 
 def channel_chip(channel_name: str, color: str) -> str:
     return (
-        f'<span class="aima-media-chip" style="background: {hex_to_rgba(color, 0.16)}; color: #E5E7EB;">'
+        f'<span class="aima-media-chip" style="background: {hex_to_rgba(color, 0.16)}; color: var(--cp-text);">'
         f'<span class="aima-media-dot" style="background: {color};"></span>{escape(channel_name)}</span>'
     )
 
