@@ -112,6 +112,12 @@ def load_poc_date_range_from_env(today: date | None = None) -> PocDateRange:
     if start and end and start > end:
         start, end = end, start
         warnings.append("시작일이 종료일보다 늦어 두 날짜를 바꿔 조회합니다.")
+    if end and end > default_end:
+        end = default_end
+        warnings.append("종료일이 오늘 이후여서 조회 가능한 전일로 조정했습니다.")
+    if start and end and start > end:
+        start = end
+        warnings.append("조회 범위가 모두 미래여서 전일 하루로 조정했습니다.")
 
     return PocDateRange(start or default_start, end or default_end, "환경변수", tuple(warnings))
 

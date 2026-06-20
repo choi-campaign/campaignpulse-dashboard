@@ -52,6 +52,27 @@ def test_reversed_date_range_is_normalized(monkeypatch):
     assert any("두 날짜를 바꿔" in warning for warning in result.warnings)
 
 
+def test_future_date_range_is_clamped_to_previous_day(monkeypatch):
+    monkeypatch.setenv("AIMAOS_POC_START_DATE", "2026-06-10")
+    monkeypatch.setenv("AIMAOS_POC_END_DATE", "2026-06-25")
+
+    result = load_poc_date_range_from_env(today=date(2026, 6, 20))
+
+    assert result.start == date(2026, 6, 10)
+    assert result.end == date(2026, 6, 19)
+    assert any("조회 가능한 전일" in warning for warning in result.warnings)
+
+
+def test_fully_future_date_range_becomes_previous_day(monkeypatch):
+    monkeypatch.setenv("AIMAOS_POC_START_DATE", "2026-06-25")
+    monkeypatch.setenv("AIMAOS_POC_END_DATE", "2026-06-30")
+
+    result = load_poc_date_range_from_env(today=date(2026, 6, 20))
+
+    assert result.start == date(2026, 6, 19)
+    assert result.end == date(2026, 6, 19)
+    assert any("전일 하루" in warning for warning in result.warnings)
+
 def test_stats_attempt_uses_repeated_ids_and_json_fields():
     attempts = build_stats_attempts(
         campaigns=[{"nccCampaignId": "cmp-1"}],
