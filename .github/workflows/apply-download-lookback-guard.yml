@@ -1,0 +1,141 @@
+name: Apply download lookback guard
+
+on:
+  push:
+    paths:
+      - .github/patches/download-lookback-guard.trigger
+
+permissions:
+  contents: write
+
+jobs:
+  update-and-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply guarded detection window
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          code_path = Path("aimaos/collectors/marketplace/gmarket_computer_use_download_poc.py")
+          code = code_path.read_text(encoding="utf-8")
+          replacements = [
+              ("from datetime import datetime\n", "from datetime import datetime, timedelta\n"),
+              (
+                  "\n\ndef classify_launch_failure(detail: str) -> tuple[str, str, str]:\n",
+                  "\n\ndef download_detection_cutoff(\n"
+                  "    started_at: datetime,\n"
+                  "    *,\n"
+                  "    watch_downloads_only: bool,\n"
+                  "    lookback_minutes: int,\n"
+                  ") -> datetime:\n"
+                  "    if not watch_downloads_only:\n"
+                  "        return started_at\n"
+                  "    return started_at - timedelta(minutes=max(0, lookback_minutes))\n"
+                  "\n\ndef classify_launch_failure(detail: str) -> tuple[str, str, str]:\n",
+              ),
+              (
+                  "def run_poc(*, wait_seconds: int, watch_downloads_only: bool) -> GmarketPowerclickPocResult:\n",
+                  "def run_poc(\n"
+                  "    *,\n"
+                  "    wait_seconds: int,\n"
+                  "    watch_downloads_only: bool,\n"
+                  "    lookback_minutes: int = 10,\n"
+                  ") -> GmarketPowerclickPocResult:\n",
+              ),
+              (
+                  "        after=None if watch_downloads_only else started_at,\n",
+                  "        after=download_detection_cutoff(\n"
+                  "            started_at,\n"
+                  "            watch_downloads_only=watch_downloads_only,\n"
+                  "            lookback_minutes=lookback_minutes,\n"
+                  "        ),\n",
+              ),
+              (
+                  "    parser.add_argument(\"--watch-downloads-only\", action=\"store_true\")\n"
+                  "    args = parser.parse_args()\n"
+                  "    result = run_poc(wait_seconds=args.wait_seconds, watch_downloads_only=args.watch_downloads_only)\n",
+                  "    parser.add_argument(\"--watch-downloads-only\", action=\"store_true\")\n"
+                  "    parser.add_argument(\n"
+                  "        \"--lookback-minutes\",\n"
+                  "        type=int,\n"
+                  "        default=10,\n"
+                  "        help=\"감시 전용 모드에서 최근 다운로드로 인정할 시간 범위(분)\",\n"
+                  "    )\n"
+                  "    args = parser.parse_args()\n"
+                  "    result = run_poc(\n"
+                  "        wait_seconds=args.wait_seconds,\n"
+                  "        watch_downloads_only=args.watch_downloads_only,\n"
+                  "        lookback_minutes=args.lookback_minutes,\n"
+                  "    )\n",
+              ),
+          ]
+          if "def download_detection_cutoff(" not in code:
+              for old, new in replacements:
+                  if old not in code:
+                      raise SystemExit(f"code pattern missing: {old[:80]!r}")
+                  code = code.replace(old, new, 1)
+          code_path.write_text(code, encoding="utf-8")
+
+          test_path = Path("tests/test_marketplace_collection.py")
+          tests = test_path.read_text(encoding="utf-8")
+          old_import = "from aimaos.collectors.marketplace.gmarket_computer_use_download_poc import completed_report_files\n"
+          new_import = (
+              "from aimaos.collectors.marketplace.gmarket_computer_use_download_poc import (\n"
+              "    completed_report_files,\n"
+              "    download_detection_cutoff,\n"
+              ")\n"
+          )
+          marker = "\n\ndef test_profile_evaluation_forwards_manual_session_start_time"
+          new_test = '''
+
+          def test_watch_only_detection_uses_bounded_lookback_window():
+              started_at = datetime(2026, 6, 20, 11, 0, 0)
+
+              regular_cutoff = download_detection_cutoff(
+                  started_at,
+                  watch_downloads_only=False,
+                  lookback_minutes=10,
+              )
+              watch_cutoff = download_detection_cutoff(
+                  started_at,
+                  watch_downloads_only=True,
+                  lookback_minutes=10,
+              )
+              zero_cutoff = download_detection_cutoff(
+                  started_at,
+                  watch_downloads_only=True,
+                  lookback_minutes=-5,
+              )
+
+              assert regular_cutoff == started_at
+              assert watch_cutoff == started_at - timedelta(minutes=10)
+              assert zero_cutoff == started_at
+          '''
+          new_test = "\n".join(line[10:] if line.startswith("          ") else line for line in new_test.splitlines())
+          if "test_watch_only_detection_uses_bounded_lookback_window" not in tests:
+              if old_import not in tests or marker not in tests:
+                  raise SystemExit("test insertion point missing")
+              tests = tests.replace(old_import, new_import, 1)
+              tests = tests.replace(marker, new_test + marker, 1)
+          test_path.write_text(tests, encoding="utf-8")
+          PY
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: python -m pip install -r requirements-dev.txt
+      - run: python -m compileall aimaos tests
+      - run: python -m pytest tests -q
+      - name: Commit verified changes
+        shell: bash
+        run: |
+          git config user.name "CampaignPulse CI"
+          git config user.email "actions@users.noreply.github.com"
+          git add aimaos/collectors/marketplace/gmarket_computer_use_download_poc.py tests/test_marketplace_collection.py
+          git commit -m "Guard watch-only downloads with recent window"
+          git push origin HEAD:main
