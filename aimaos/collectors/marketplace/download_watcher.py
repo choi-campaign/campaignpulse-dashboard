@@ -6,7 +6,18 @@ import time
 
 
 PARTIAL_SUFFIXES = (".crdownload", ".tmp", ".part")
-REPORT_PATTERNS = ("*.xlsx", "*.xls", "*.csv")
+REPORT_SUFFIXES = {".xlsx", ".xls", ".csv"}
+
+
+def is_completed_download(path: Path) -> bool:
+    try:
+        return (
+            path.is_file()
+            and path.suffix.lower() not in PARTIAL_SUFFIXES
+            and path.stat().st_size > 0
+        )
+    except OSError:
+        return False
 
 
 def list_completed_downloads(download_dir: Path, pattern: str = "*.xls*", after: datetime | None = None) -> list[Path]:
@@ -15,7 +26,7 @@ def list_completed_downloads(download_dir: Path, pattern: str = "*.xls*", after:
 
     files = []
     for path in download_dir.glob(pattern):
-        if not path.is_file() or path.suffix.lower() in PARTIAL_SUFFIXES:
+        if not is_completed_download(path):
             continue
         if after and datetime.fromtimestamp(path.stat().st_mtime) < after:
             continue
@@ -29,11 +40,18 @@ def list_completed_report_downloads(
     *,
     include_demo: bool = False,
 ) -> list[Path]:
+    if not download_dir.exists():
+        return []
+
     files: set[Path] = set()
-    for pattern in REPORT_PATTERNS:
-        files.update(list_completed_downloads(download_dir, pattern, after))
-    if not include_demo:
-        files = {path for path in files if not path.name.lower().startswith("demo_")}
+    for path in download_dir.iterdir():
+        if path.suffix.lower() not in REPORT_SUFFIXES or not is_completed_download(path):
+            continue
+        if after and datetime.fromtimestamp(path.stat().st_mtime) < after:
+            continue
+        if not include_demo and path.name.lower().startswith("demo_"):
+            continue
+        files.add(path)
     return sorted(files, key=lambda item: item.stat().st_mtime, reverse=True)
 
 
@@ -54,4 +72,3 @@ def wait_for_completed_download(
             last_size[path] = current_size
         time.sleep(1)
     return None
-
