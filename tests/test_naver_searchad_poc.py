@@ -271,6 +271,7 @@ def test_naver_collection_log_records_no_data_without_raw_customer_id(tmp_path):
     rows = recent_collection_logs(10, db_path)
     assert rows[0]["status"] == "no_data"
     assert rows[0]["error_code"] == "NAVER_STATS_NO_DATA"
+    assert rows[0]["rows_collected"] == 0
     assert rows[0]["advertiser_id"].startswith("naver:")
     assert "demo-customer" not in rows[0]["advertiser_id"]
     status = collection_status_by_media(db_path)["naver_searchad"]

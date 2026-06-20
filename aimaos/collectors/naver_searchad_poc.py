@@ -388,6 +388,11 @@ def write_naver_collection_log(
         ]
         existing_paths = [path for path in evidence_paths if path.exists() and path.is_file()]
         storage_used_mb = sum(path.stat().st_size for path in existing_paths) / (1024 * 1024)
+        rows_collected = (
+            0
+            if status == "no_data"
+            else int(context.get("standard_csv_rows") or response_rows or 0)
+        )
         record = CollectionLogRecord(
             collection_id=f"naver_{finished_at.strftime('%Y%m%d_%H%M%S_%f')}_{account_hash[:8]}",
             advertiser_id=f"naver:{account_hash}",
@@ -395,7 +400,7 @@ def write_naver_collection_log(
             started_at=started_at.strftime("%Y-%m-%d %H:%M:%S"),
             finished_at=finished_at.strftime("%Y-%m-%d %H:%M:%S"),
             status=status,
-            rows_collected=int(context.get("standard_csv_rows") or response_rows or 0),
+            rows_collected=rows_collected,
             file_count=len(existing_paths),
             storage_used_mb=round(storage_used_mb, 4),
             error_code=error_code,
