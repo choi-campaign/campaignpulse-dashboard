@@ -1,0 +1,96 @@
+name: Add marketplace file guard test
+
+on:
+  push:
+    paths:
+      - .github/patches/marketplace-file-guard.trigger
+
+permissions:
+  contents: write
+
+jobs:
+  update-and-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Add regression cases
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path("tests/test_marketplace_collection.py")
+          text = path.read_text(encoding="utf-8")
+          old = '''    csv_path = tmp_path / "report.csv"
+              xlsx_path = tmp_path / "report.xlsx"
+              partial_path = tmp_path / "report.xlsx.crdownload"
+              demo_path = tmp_path / "demo_gmarket_report.csv"
+              csv_path.write_text("date,cost\\n2026-06-01,1000\\n", encoding="utf-8")
+              xlsx_path.write_bytes(b"safe-test-placeholder")
+              partial_path.write_bytes(b"incomplete")
+              demo_path.write_text("date,cost\\n2026-06-01,1000\\n", encoding="utf-8")
+              set_modified_at(csv_path, now)
+              set_modified_at(xlsx_path, now)
+              set_modified_at(partial_path, now)
+              set_modified_at(demo_path, now)
+          '''
+          old = "\n".join(line[4:] if line.startswith("    ") else line for line in old.splitlines()) + "\n"
+          new = '''    csv_path = tmp_path / "report.csv"
+              xlsx_path = tmp_path / "report.xlsx"
+              uppercase_path = tmp_path / "REPORT.XLSX"
+              empty_path = tmp_path / "empty.xlsx"
+              partial_path = tmp_path / "report.xlsx.crdownload"
+              demo_path = tmp_path / "demo_gmarket_report.csv"
+              csv_path.write_text("date,cost\\n2026-06-01,1000\\n", encoding="utf-8")
+              xlsx_path.write_bytes(b"safe-test-placeholder")
+              uppercase_path.write_bytes(b"safe-uppercase-placeholder")
+              empty_path.write_bytes(b"")
+              partial_path.write_bytes(b"incomplete")
+              demo_path.write_text("date,cost\\n2026-06-01,1000\\n", encoding="utf-8")
+              set_modified_at(csv_path, now)
+              set_modified_at(xlsx_path, now)
+              set_modified_at(uppercase_path, now)
+              set_modified_at(empty_path, now)
+              set_modified_at(partial_path, now)
+              set_modified_at(demo_path, now)
+          '''
+          new = "\n".join(line[4:] if line.startswith("    ") else line for line in new.splitlines()) + "\n"
+          if "uppercase_path = tmp_path" not in text:
+              if old not in text:
+                  raise SystemExit("download fixture block not found")
+              text = text.replace(old, new, 1)
+          old_assert = '''    assert csv_path in detected
+          assert xlsx_path in detected
+          assert partial_path not in detected
+          '''
+          old_assert = "\n".join(line[4:] if line.startswith("    ") else line for line in old_assert.splitlines()) + "\n"
+          new_assert = '''    assert csv_path in detected
+          assert xlsx_path in detected
+          assert uppercase_path in detected
+          assert empty_path not in detected
+          assert partial_path not in detected
+          '''
+          new_assert = "\n".join(line[4:] if line.startswith("    ") else line for line in new_assert.splitlines()) + "\n"
+          if "assert uppercase_path in detected" not in text:
+              if old_assert not in text:
+                  raise SystemExit("download assertion block not found")
+              text = text.replace(old_assert, new_assert, 1)
+          path.write_text(text, encoding="utf-8")
+          PY
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: python -m pip install -r requirements-dev.txt
+      - run: python -m compileall aimaos tests
+      - run: python -m pytest tests -q
+      - name: Commit verified test
+        shell: bash
+        run: |
+          git config user.name "CampaignPulse CI"
+          git config user.email "actions@users.noreply.github.com"
+          git add tests/test_marketplace_collection.py
+          git commit -m "Test marketplace completed file guards"
+          git push origin HEAD:main
