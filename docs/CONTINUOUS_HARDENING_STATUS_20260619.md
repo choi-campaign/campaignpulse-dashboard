@@ -1,6 +1,6 @@
 # CampaignPulse Continuous Hardening Status
 
-기록일: 2026-06-19
+기록일: 2026-06-20
 
 ## 실제 변경 파일
 
@@ -12,16 +12,21 @@
 - `aimaos/collectors/marketplace/base_collector.py`
 - `aimaos/collectors/marketplace/marketplace_collection_poc.py`
   - 성공 로그에 실제 진단 행 수와 감지 파일 용량을 기록한다.
+- `aimaos/collectors/marketplace/download_watcher.py`
+  - CSV/Excel 확장자를 대소문자와 관계없이 감지한다.
+  - 0바이트 파일과 다운로드 중인 임시 파일은 수집 성공으로 인정하지 않는다.
 - `tests/test_marketplace_collection.py`
 - `tests/test_demo_deploy_readiness.py`
 - `docs/COLLECTION_LOG_SCHEMA.md`
 - `docs/DATA_STATUS_CENTER_REFACTOR.md`
+- `docs/MARKETPLACE_DOWNLOAD_SUCCESS_GUARD.md`
 
 ## 검증 결과
 
 - Python compile: 성공
 - pytest: `29 passed`
 - GitHub Actions `CampaignPulse checks`: 성공
+- 마켓플레이스 파일 감지 회귀 테스트: 성공
 - 온라인 데모 안내: 정상
 - 온라인 데이터 확인 필요: 1개 채널
 - 온라인 주요 메뉴 8개: 모두 정상
