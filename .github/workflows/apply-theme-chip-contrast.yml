@@ -1,0 +1,72 @@
+name: Apply theme chip contrast
+
+on:
+  push:
+    paths:
+      - .github/patches/theme-chip-contrast.trigger
+
+permissions:
+  contents: write
+
+jobs:
+  update-and-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply theme-aware chip text
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          app_path = Path("aimaos/app/streamlit_app.py")
+          source = app_path.read_text(encoding="utf-8")
+          replacements = [
+              (
+                  'f\'<span class="aima-media-chip" style="background: {background}; color: {style["text"]};">\'',
+                  'f\'<span class="aima-media-chip" style="background: {background}; color: var(--cp-text);">\'',
+              ),
+              (
+                  'f\'<span class="aima-media-chip" style="background: {hex_to_rgba(color, 0.16)}; color: #E5E7EB;">\'',
+                  'f\'<span class="aima-media-chip" style="background: {hex_to_rgba(color, 0.16)}; color: var(--cp-text);">\'',
+              ),
+          ]
+          for old, new in replacements:
+              if new in source:
+                  continue
+              if old not in source:
+                  raise SystemExit(f"app pattern missing: {old}")
+              source = source.replace(old, new, 1)
+          app_path.write_text(source, encoding="utf-8")
+
+          test_path = Path("tests/test_demo_deploy_readiness.py")
+          tests = test_path.read_text(encoding="utf-8")
+          marker = '    assert "color: var(--cp-text) !important;" in source\n'
+          additions = (
+              marker
+              + '    assert \'style="background: {background}; color: var(--cp-text);"\' in source\n'
+              + '    assert \'style="background: {hex_to_rgba(color, 0.16)}; color: var(--cp-text);"\' in source\n'
+          )
+          if 'style="background: {background}; color: var(--cp-text);"' not in tests:
+              if marker not in tests:
+                  raise SystemExit("test marker missing")
+              tests = tests.replace(marker, additions, 1)
+          test_path.write_text(tests, encoding="utf-8")
+          PY
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: python -m pip install -r requirements-dev.txt
+      - run: python -m compileall aimaos tests
+      - run: python -m pytest tests -q
+      - name: Commit verified changes
+        shell: bash
+        run: |
+          git config user.name "CampaignPulse CI"
+          git config user.email "actions@users.noreply.github.com"
+          git add aimaos/app/streamlit_app.py tests/test_demo_deploy_readiness.py
+          git commit -m "Use theme-aware text for media chips"
+          git push origin HEAD:main
