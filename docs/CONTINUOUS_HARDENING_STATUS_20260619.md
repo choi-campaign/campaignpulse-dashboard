@@ -9,6 +9,7 @@
 - `aimaos/app/streamlit_app.py`
   - 수집 시도 시각과 성공 수집 시각을 구분한다.
   - 데모 상태를 데이터 확인 필요 건수에서 제외한다.
+  - 매체·채널 칩의 글자가 라이트·다크 테마 공통 본문 색상을 따르도록 보강한다.
 - `aimaos/collectors/marketplace/base_collector.py`
 - `aimaos/collectors/marketplace/marketplace_collection_poc.py`
   - 성공 로그에 실제 진단 행 수와 감지 파일 용량을 기록한다.
@@ -33,7 +34,7 @@
 - 온라인 데이터 확인 필요: 1개 채널
 - 온라인 주요 메뉴 8개: 모두 정상
 - 온라인 콘솔 오류: 0건
-- 다크 모드: 제목, 본문, 카드, 버튼 대비 확인
+- 라이트·다크 모드: 제목, 본문, 카드, 버튼, 매체 칩 대비 보강
 - 실제 업로드 데이터 우선 적용: AppTest 통과
 
 Streamlit Cloud에서 이전 화면이 유지된 원인은 비활성 앱 절전 상태였다. 앱을 다시 시작한 뒤 최신 GitHub 커밋, `마지막 수집 시도` 문구, 데모 상태 집계 1건이 온라인에 반영된 것을 확인했다.
