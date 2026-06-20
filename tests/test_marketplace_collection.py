@@ -6,7 +6,10 @@ from aimaos.collectors.marketplace.download_watcher import (
     list_completed_downloads,
     list_completed_report_downloads,
 )
-from aimaos.collectors.marketplace.gmarket_computer_use_download_poc import completed_report_files
+from aimaos.collectors.marketplace.gmarket_computer_use_download_poc import (
+    completed_report_files,
+    download_detection_cutoff,
+)
 from aimaos.collectors.marketplace import marketplace_collection_poc
 from aimaos.collectors.marketplace.base_collector import (
     MarketplacePocResult,
@@ -73,6 +76,29 @@ def test_new_collection_does_not_reuse_stale_download(tmp_path):
     assert detected == [new_file]
     assert list_completed_downloads(tmp_path, "*.csv", after=started_at) == [new_file]
 
+
+def test_watch_only_detection_uses_bounded_lookback_window():
+    started_at = datetime(2026, 6, 20, 11, 0, 0)
+
+    regular_cutoff = download_detection_cutoff(
+        started_at,
+        watch_downloads_only=False,
+        lookback_minutes=10,
+    )
+    watch_cutoff = download_detection_cutoff(
+        started_at,
+        watch_downloads_only=True,
+        lookback_minutes=10,
+    )
+    zero_cutoff = download_detection_cutoff(
+        started_at,
+        watch_downloads_only=True,
+        lookback_minutes=-5,
+    )
+
+    assert regular_cutoff == started_at
+    assert watch_cutoff == started_at - timedelta(minutes=10)
+    assert zero_cutoff == started_at
 
 def test_profile_evaluation_forwards_manual_session_start_time(tmp_path, monkeypatch):
     started_at = datetime.now()

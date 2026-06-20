@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import argparse
 from dataclasses import asdict, dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 from pathlib import Path
 
@@ -55,6 +55,17 @@ def completed_report_files(download_dir: Path, after: datetime | None = None) ->
         if path.suffix.lower() in ALLOWED_EXTENSIONS and path.stat().st_size > 0
     ]
     return sorted(set(valid_files), key=lambda item: item.stat().st_mtime, reverse=True)
+
+
+def download_detection_cutoff(
+    started_at: datetime,
+    *,
+    watch_downloads_only: bool,
+    lookback_minutes: int,
+) -> datetime:
+    if not watch_downloads_only:
+        return started_at
+    return started_at - timedelta(minutes=max(0, lookback_minutes))
 
 
 def classify_launch_failure(detail: str) -> tuple[str, str, str]:
@@ -325,7 +336,12 @@ def write_strategy_summary() -> None:
     )
 
 
-def run_poc(*, wait_seconds: int, watch_downloads_only: bool) -> GmarketPowerclickPocResult:
+def run_poc(
+    *,
+    wait_seconds: int,
+    watch_downloads_only: bool,
+    lookback_minutes: int = 10,
+) -> GmarketPowerclickPocResult:
     load_dotenv(PROJECT_ROOT / ".env")
     started_at = datetime.now()
     profile = gmarket_legacy.get_profile(PROJECT_ROOT)
@@ -358,7 +374,11 @@ def run_poc(*, wait_seconds: int, watch_downloads_only: bool) -> GmarketPowercli
 
     detected_files = completed_report_files(
         profile.download_dir,
-        after=None if watch_downloads_only else started_at,
+        after=download_detection_cutoff(
+            started_at,
+            watch_downloads_only=watch_downloads_only,
+            lookback_minutes=lookback_minutes,
+        ),
     )
     selected_file = detected_files[0] if detected_files else None
     if selected_file is None:
@@ -418,8 +438,18 @@ def main() -> None:
     parser.add_argument("--profile", default="gmarket_legacy", choices=["gmarket_legacy"])
     parser.add_argument("--wait-seconds", type=int, default=300)
     parser.add_argument("--watch-downloads-only", action="store_true")
+    parser.add_argument(
+        "--lookback-minutes",
+        type=int,
+        default=10,
+        help="감시 전용 모드에서 최근 다운로드로 인정할 시간 범위(분)",
+    )
     args = parser.parse_args()
-    result = run_poc(wait_seconds=args.wait_seconds, watch_downloads_only=args.watch_downloads_only)
+    result = run_poc(
+        wait_seconds=args.wait_seconds,
+        watch_downloads_only=args.watch_downloads_only,
+        lookback_minutes=args.lookback_minutes,
+    )
     print(json.dumps(asdict(result), ensure_ascii=False, indent=2))
     print(REPORT_PATH)
 
