@@ -31,14 +31,20 @@ def test_report_download_detection_supports_excel_and_csv(tmp_path):
     now = datetime.now()
     csv_path = tmp_path / "report.csv"
     xlsx_path = tmp_path / "report.xlsx"
+    uppercase_path = tmp_path / "REPORT.XLSX"
+    empty_path = tmp_path / "empty.xlsx"
     partial_path = tmp_path / "report.xlsx.crdownload"
     demo_path = tmp_path / "demo_gmarket_report.csv"
     csv_path.write_text("date,cost\n2026-06-01,1000\n", encoding="utf-8")
     xlsx_path.write_bytes(b"safe-test-placeholder")
+    uppercase_path.write_bytes(b"safe-uppercase-placeholder")
+    empty_path.write_bytes(b"")
     partial_path.write_bytes(b"incomplete")
     demo_path.write_text("date,cost\n2026-06-01,1000\n", encoding="utf-8")
     set_modified_at(csv_path, now)
     set_modified_at(xlsx_path, now)
+    set_modified_at(uppercase_path, now)
+    set_modified_at(empty_path, now)
     set_modified_at(partial_path, now)
     set_modified_at(demo_path, now)
 
@@ -46,6 +52,8 @@ def test_report_download_detection_supports_excel_and_csv(tmp_path):
 
     assert csv_path in detected
     assert xlsx_path in detected
+    assert uppercase_path in detected
+    assert empty_path not in detected
     assert partial_path not in detected
     assert demo_path not in detected
     assert demo_path in list_completed_report_downloads(tmp_path, include_demo=True)
