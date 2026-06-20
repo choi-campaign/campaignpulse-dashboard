@@ -1,0 +1,71 @@
+name: Apply Naver no-data row count
+
+on:
+  push:
+    paths:
+      - .github/patches/naver-no-data-row-count.trigger
+
+permissions:
+  contents: write
+
+jobs:
+  update-and-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Correct no-data collection rows
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          code_path = Path("aimaos/collectors/naver_searchad_poc.py")
+          code = code_path.read_text(encoding="utf-8")
+          marker = (
+              "        existing_paths = [path for path in evidence_paths if path.exists() and path.is_file()]\n"
+              "        storage_used_mb = sum(path.stat().st_size for path in existing_paths) / (1024 * 1024)\n"
+          )
+          addition = marker + (
+              "        rows_collected = (\n"
+              "            0\n"
+              "            if status == \"no_data\"\n"
+              "            else int(context.get(\"standard_csv_rows\") or response_rows or 0)\n"
+              "        )\n"
+          )
+          if "if status == \"no_data\"" not in code:
+              if marker not in code:
+                  raise SystemExit("row count marker missing")
+              code = code.replace(marker, addition, 1)
+              old = '            rows_collected=int(context.get("standard_csv_rows") or response_rows or 0),\n'
+              if old not in code:
+                  raise SystemExit("row assignment missing")
+              code = code.replace(old, "            rows_collected=rows_collected,\n", 1)
+          code_path.write_text(code, encoding="utf-8")
+
+          test_path = Path("tests/test_naver_searchad_poc.py")
+          tests = test_path.read_text(encoding="utf-8")
+          marker = '    assert rows[0]["error_code"] == "NAVER_STATS_NO_DATA"\n'
+          expected = marker + '    assert rows[0]["rows_collected"] == 0\n'
+          if 'assert rows[0]["rows_collected"] == 0' not in tests:
+              if marker not in tests:
+                  raise SystemExit("test marker missing")
+              tests = tests.replace(marker, expected, 1)
+          test_path.write_text(tests, encoding="utf-8")
+          PY
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: python -m pip install -r requirements-dev.txt
+      - run: python -m compileall aimaos tests
+      - run: python -m pytest tests -q
+      - name: Commit verified changes
+        shell: bash
+        run: |
+          git config user.name "CampaignPulse CI"
+          git config user.email "actions@users.noreply.github.com"
+          git add aimaos/collectors/naver_searchad_poc.py tests/test_naver_searchad_poc.py
+          git commit -m "Record zero rows for Naver no-data collections"
+          git push origin HEAD:main
