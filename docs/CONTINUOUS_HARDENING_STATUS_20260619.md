@@ -18,18 +18,23 @@
   - 0바이트 파일과 다운로드 중인 임시 파일은 수집 성공으로 인정하지 않는다.
 - `aimaos/collectors/marketplace/gmarket_computer_use_download_poc.py`
   - 감시 전용 실행에서 오래된 다운로드 파일을 새 수집 성공으로 재사용하지 않도록 최근 파일 감지 범위를 제한한다.
+- `aimaos/collectors/naver_searchad_poc.py`
+  - 미래 날짜가 입력된 성과 조회 범위를 전일까지로 안전하게 보정하고 경고를 기록한다.
 - `tests/test_marketplace_collection.py`
 - `tests/test_demo_deploy_readiness.py`
+- `tests/test_naver_searchad_poc.py`
 - `docs/COLLECTION_LOG_SCHEMA.md`
 - `docs/DATA_STATUS_CENTER_REFACTOR.md`
 - `docs/MARKETPLACE_DOWNLOAD_SUCCESS_GUARD.md`
+- `docs/NAVER_API_DATE_RANGE_STATS_RESULT.md`
 
 ## 검증 결과
 
 - Python compile: 성공
-- pytest: `30 passed`
+- pytest: `32 passed`
 - GitHub Actions `CampaignPulse checks`: 성공
 - 마켓플레이스 파일 감지 회귀 테스트: 성공
+- 네이버 날짜 범위 보정 테스트: 성공
 - 온라인 데모 안내: 정상
 - 온라인 데이터 확인 필요: 1개 채널
 - 온라인 주요 메뉴 8개: 모두 정상
