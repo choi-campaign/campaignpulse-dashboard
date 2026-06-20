@@ -20,6 +20,7 @@
   - 감시 전용 실행에서 오래된 다운로드 파일을 새 수집 성공으로 재사용하지 않도록 최근 파일 감지 범위를 제한한다.
 - `aimaos/collectors/naver_searchad_poc.py`
   - 미래 날짜가 입력된 성과 조회 범위를 전일까지로 안전하게 보정하고 경고를 기록한다.
+  - 빈 stats 응답용 placeholder 행은 실제 수집량에 포함하지 않고 `rows_collected=0`으로 기록한다.
 - `tests/test_marketplace_collection.py`
 - `tests/test_demo_deploy_readiness.py`
 - `tests/test_naver_searchad_poc.py`
@@ -34,7 +35,7 @@
 - pytest: `32 passed`
 - GitHub Actions `CampaignPulse checks`: 성공
 - 마켓플레이스 파일 감지 회귀 테스트: 성공
-- 네이버 날짜 범위 보정 테스트: 성공
+- 네이버 날짜 범위 및 빈 데이터 로그 테스트: 성공
 - 온라인 데모 안내: 정상
 - 온라인 데이터 확인 필요: 1개 채널
 - 온라인 주요 메뉴 8개: 모두 정상
