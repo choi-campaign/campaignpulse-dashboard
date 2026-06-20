@@ -15,6 +15,8 @@
 - `aimaos/collectors/marketplace/download_watcher.py`
   - CSV/Excel 확장자를 대소문자와 관계없이 감지한다.
   - 0바이트 파일과 다운로드 중인 임시 파일은 수집 성공으로 인정하지 않는다.
+- `aimaos/collectors/marketplace/gmarket_computer_use_download_poc.py`
+  - 감시 전용 실행에서 오래된 다운로드 파일을 새 수집 성공으로 재사용하지 않도록 최근 파일 감지 범위를 제한한다.
 - `tests/test_marketplace_collection.py`
 - `tests/test_demo_deploy_readiness.py`
 - `docs/COLLECTION_LOG_SCHEMA.md`
@@ -24,7 +26,7 @@
 ## 검증 결과
 
 - Python compile: 성공
-- pytest: `29 passed`
+- pytest: `30 passed`
 - GitHub Actions `CampaignPulse checks`: 성공
 - 마켓플레이스 파일 감지 회귀 테스트: 성공
 - 온라인 데모 안내: 정상
