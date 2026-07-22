@@ -22,6 +22,7 @@
   - 미래 날짜가 입력된 성과 조회 범위를 전일까지로 안전하게 보정하고 경고를 기록한다.
   - 빈 stats 응답용 placeholder 행은 실제 수집량에 포함하지 않고 `rows_collected=0`으로 기록한다.
 - `tests/test_marketplace_collection.py`
+  - 수집 로그에 UTC/타임존 포함 시각이 들어와도 Data Status Center 기준 시각이 한국 시간으로 정규화되는지 회귀 테스트로 고정한다.
 - `tests/test_demo_deploy_readiness.py`
 - `tests/test_naver_searchad_poc.py`
   - 네이버 API HTTP 429 계열 재시도와 401 인증 오류 비재시도 동작을 회귀 테스트로 고정한다.
@@ -33,9 +34,10 @@
 ## 검증 결과
 
 - Python compile: 성공
-- pytest: `360 passed`
+- pytest: `361 passed`
 - GitHub Actions `CampaignPulse checks`: 성공
 - 마켓플레이스 파일 감지 회귀 테스트: 성공
+- 수집 로그 타임존 정규화 회귀 테스트: 성공
 - 네이버 날짜 범위 및 빈 데이터 로그 테스트: 성공
 - 네이버 HTTP 재시도/비재시도 회귀 테스트: 성공
 - 온라인 데모 안내: 정상

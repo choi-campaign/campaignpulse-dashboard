@@ -242,6 +242,33 @@ def test_collection_status_uses_latest_attempt_and_preserves_prior_success(tmp_p
     assert gmarket["success_rate_30d"] == 50
 
 
+def test_collection_status_normalizes_timezone_aware_log_times(tmp_path):
+    db_path = tmp_path / "collection_log.sqlite3"
+    append_collection_log(
+        CollectionLogRecord(
+            collection_id="utc-success",
+            advertiser_id="sample",
+            media="gmarket",
+            started_at="2026-06-18T00:00:00+00:00",
+            finished_at="2026-06-18T00:05:00+00:00",
+            status="success",
+            rows_collected=10,
+            file_count=1,
+            storage_used_mb=0.1,
+            error_code="",
+            error_message="",
+        ),
+        db_path,
+    )
+
+    gmarket = collection_status_by_media(
+        db_path,
+        now=datetime(2026, 6, 19, 0, 0, 0),
+    )["gmarket"]
+
+    assert gmarket["latest_finished_at"] == datetime(2026, 6, 18, 9, 5, 0)
+    assert gmarket["last_success_at"] == datetime(2026, 6, 18, 9, 5, 0)
+
 def test_manual_marketplace_attempt_without_download_records_failure(tmp_path):
     db_path = tmp_path / "collection_log.sqlite3"
     started_at = datetime(2026, 6, 19, 10, 0, 0)
