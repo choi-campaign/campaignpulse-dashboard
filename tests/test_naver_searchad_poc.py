@@ -344,6 +344,43 @@ def test_naver_collection_log_records_no_data_without_raw_customer_id(tmp_path):
     status = collection_status_by_media(db_path)["naver_searchad"]
     assert status["latest_status"] == "no_data"
 
+def test_naver_collection_log_records_success_with_report_artifacts(tmp_path):
+    db_path = tmp_path / "collection_log.sqlite3"
+    csv_path = tmp_path / "naver_searchad_standard.csv"
+    markdown_path = tmp_path / "report.md"
+    excel_path = tmp_path / "analysis.xlsx"
+    csv_path.write_text("date,impressions\n2026-06-19,100\n", encoding="utf-8")
+    markdown_path.write_text("# report\n", encoding="utf-8")
+    excel_path.write_bytes(b"safe-xlsx-placeholder")
+    context = {
+        "started_at": "2026-06-19 09:00:00",
+        "response_data_rows": 8,
+        "standard_csv_rows": 8,
+        "zero_guard_applied": False,
+        "standard_csv_path": str(csv_path),
+        "report_paths": {"markdown": str(markdown_path), "excel": str(excel_path)},
+    }
+    results = [
+        PocStepResult("기간 성과 조회", "성공", "stats API 조회 성공"),
+        PocStepResult("AIMAOS 기존 파이프라인 연결", "성공", "파이프라인 연결 성공"),
+        PocStepResult("보고서 자동 생성", "성공", "보고서 생성 성공"),
+    ]
+
+    step = write_naver_collection_log(credentials(), context, results, db_path)
+
+    assert step.status == "성공"
+    rows = recent_collection_logs(10, db_path)
+    assert rows[0]["status"] == "success"
+    assert rows[0]["error_code"] == ""
+    assert rows[0]["rows_collected"] == 8
+    assert rows[0]["file_count"] == 3
+    assert rows[0]["storage_used_mb"] > 0
+    assert rows[0]["advertiser_id"].startswith("naver:")
+    assert "demo-customer" not in rows[0]["advertiser_id"]
+    status = collection_status_by_media(db_path)["naver_searchad"]
+    assert status["latest_status"] == "success"
+    assert status["last_success_at"] is not None
+
 def test_naver_collection_log_records_partial_when_pipeline_fails(tmp_path):
     db_path = tmp_path / "collection_log.sqlite3"
     csv_path = tmp_path / "naver_searchad_standard.csv"
