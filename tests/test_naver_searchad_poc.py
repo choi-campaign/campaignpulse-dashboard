@@ -373,3 +373,31 @@ def test_naver_collection_log_records_partial_when_pipeline_fails(tmp_path):
     status = collection_status_by_media(db_path)["naver_searchad"]
     assert status["latest_status"] == "partial"
 
+def test_naver_collection_log_records_failed_when_stats_step_fails(tmp_path):
+    db_path = tmp_path / "collection_log.sqlite3"
+    context = {
+        "started_at": "2026-06-19 09:00:00",
+        "response_data_rows": None,
+        "standard_csv_rows": None,
+        "zero_guard_applied": False,
+        "standard_csv_path": None,
+        "report_paths": {},
+    }
+    results = [
+        PocStepResult("기간 성과 조회", "실패", "stats API 조회 실패"),
+    ]
+
+    step = write_naver_collection_log(credentials(), context, results, db_path)
+
+    assert step.status == "성공"
+    rows = recent_collection_logs(10, db_path)
+    assert rows[0]["status"] == "failed"
+    assert rows[0]["error_code"] == "NAVER_STATS_COLLECTION_FAILED"
+    assert rows[0]["error_message"] == "stats API 조회 실패"
+    assert rows[0]["rows_collected"] == 0
+    assert rows[0]["file_count"] == 0
+    assert "demo-customer" not in rows[0]["advertiser_id"]
+    status = collection_status_by_media(db_path)["naver_searchad"]
+    assert status["latest_status"] == "failed"
+    assert status["last_failure_at"] is not None
+
