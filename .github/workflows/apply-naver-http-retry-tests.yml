@@ -33,74 +33,75 @@ jobs:
               'from datetime import date\nimport csv\nfrom io import BytesIO\nimport json\nfrom urllib.error import HTTPError, URLError\n',
           )
           if 'test_naver_client_retries_retryable_http_error' not in text:
-              new_tests = '''def test_naver_client_retries_retryable_http_error(monkeypatch, tmp_path):
-    calls = []
-    sleeps = []
-
-    def fake_urlopen(_request, timeout):
-        calls.append(timeout)
-        if len(calls) == 1:
-            raise HTTPError(
-                url="https://api.searchad.naver.com/stats",
-                code=429,
-                msg="Too Many Requests",
-                hdrs=None,
-                fp=BytesIO(b'{"code":429}'),
-            )
-        return FakeResponse()
-
-    monkeypatch.setattr(naver_searchad_poc, "urlopen", fake_urlopen)
-    monkeypatch.setattr(naver_searchad_poc.time, "sleep", sleeps.append)
-    client = NaverSearchAdPocClient(
-        credentials(),
-        tmp_path / "evidence",
-        max_attempts=2,
-        retry_delay_seconds=0.2,
-    )
-
-    ok, payload, status = client.request_json("GET", "/stats")
-
-    assert ok is True
-    assert payload["data"][0]["id"] == "cmp-1"
-    assert status == "HTTP 200"
-    assert len(calls) == 2
-    assert sleeps == [0.2]
-
-
-def test_naver_client_does_not_retry_non_retryable_http_error(monkeypatch, tmp_path):
-    calls = []
-    sleeps = []
-
-    def fake_urlopen(_request, timeout):
-        calls.append(timeout)
-        raise HTTPError(
-            url="https://api.searchad.naver.com/stats",
-            code=401,
-            msg="Unauthorized",
-            hdrs=None,
-            fp=BytesIO(b'{"error":"unauthorized"}'),
-        )
-
-    monkeypatch.setattr(naver_searchad_poc, "urlopen", fake_urlopen)
-    monkeypatch.setattr(naver_searchad_poc.time, "sleep", sleeps.append)
-    client = NaverSearchAdPocClient(
-        credentials(),
-        tmp_path / "evidence",
-        max_attempts=3,
-        retry_delay_seconds=0.1,
-    )
-
-    ok, payload, status = client.request_json("GET", "/stats")
-
-    assert ok is False
-    assert status == "HTTP 401"
-    assert payload["status"] == 401
-    assert payload["attempts"] == 1
-    assert len(calls) == 1
-    assert sleeps == []
-
-
-'''
+              new_tests = '\n'.join([
+                  'def test_naver_client_retries_retryable_http_error(monkeypatch, tmp_path):',
+                  '    calls = []',
+                  '    sleeps = []',
+                  '',
+                  '    def fake_urlopen(_request, timeout):',
+                  '        calls.append(timeout)',
+                  '        if len(calls) == 1:',
+                  '            raise HTTPError(',
+                  '                url="https://api.searchad.naver.com/stats",',
+                  '                code=429,',
+                  '                msg="Too Many Requests",',
+                  '                hdrs=None,',
+                  '                fp=BytesIO(b\'{"code":429}\'),',
+                  '            )',
+                  '        return FakeResponse()',
+                  '',
+                  '    monkeypatch.setattr(naver_searchad_poc, "urlopen", fake_urlopen)',
+                  '    monkeypatch.setattr(naver_searchad_poc.time, "sleep", sleeps.append)',
+                  '    client = NaverSearchAdPocClient(',
+                  '        credentials(),',
+                  '        tmp_path / "evidence",',
+                  '        max_attempts=2,',
+                  '        retry_delay_seconds=0.2,',
+                  '    )',
+                  '',
+                  '    ok, payload, status = client.request_json("GET", "/stats")',
+                  '',
+                  '    assert ok is True',
+                  '    assert payload["data"][0]["id"] == "cmp-1"',
+                  '    assert status == "HTTP 200"',
+                  '    assert len(calls) == 2',
+                  '    assert sleeps == [0.2]',
+                  '',
+                  '',
+                  'def test_naver_client_does_not_retry_non_retryable_http_error(monkeypatch, tmp_path):',
+                  '    calls = []',
+                  '    sleeps = []',
+                  '',
+                  '    def fake_urlopen(_request, timeout):',
+                  '        calls.append(timeout)',
+                  '        raise HTTPError(',
+                  '            url="https://api.searchad.naver.com/stats",',
+                  '            code=401,',
+                  '            msg="Unauthorized",',
+                  '            hdrs=None,',
+                  '            fp=BytesIO(b\'{"error":"unauthorized"}\'),',
+                  '        )',
+                  '',
+                  '    monkeypatch.setattr(naver_searchad_poc, "urlopen", fake_urlopen)',
+                  '    monkeypatch.setattr(naver_searchad_poc.time, "sleep", sleeps.append)',
+                  '    client = NaverSearchAdPocClient(',
+                  '        credentials(),',
+                  '        tmp_path / "evidence",',
+                  '        max_attempts=3,',
+                  '        retry_delay_seconds=0.1,',
+                  '    )',
+                  '',
+                  '    ok, payload, status = client.request_json("GET", "/stats")',
+                  '',
+                  '    assert ok is False',
+                  '    assert status == "HTTP 401"',
+                  '    assert payload["status"] == 401',
+                  '    assert payload["attempts"] == 1',
+                  '    assert len(calls) == 1',
+                  '    assert sleeps == []',
+                  '',
+                  '',
+              ])
               marker = '    assert sleeps == [0.1]\n\n\ndef test_naver_collection_log_records_no_data_without_raw_customer_id'
               text = text.replace(
                   marker,
