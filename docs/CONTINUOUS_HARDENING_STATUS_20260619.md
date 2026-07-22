@@ -24,6 +24,7 @@
 - `tests/test_marketplace_collection.py`
   - 수집 로그에 UTC/타임존 포함 시각이 들어와도 Data Status Center 기준 시각이 한국 시간으로 정규화되는지 회귀 테스트로 고정한다.
   - 30일 이전 성공 기록은 마지막 성공 시각으로 보존하되 최근 30일 성공률 계산에는 포함하지 않는지 회귀 테스트로 고정한다.
+  - 최근 30일 안에 시도 기록이 없는 매체는 오래된 성공 기록만으로 최근 성공률을 표시하지 않는지 회귀 테스트로 고정한다.
 - `tests/test_demo_deploy_readiness.py`
 - `tests/test_naver_searchad_poc.py`
   - 네이버 API HTTP 429 계열 재시도와 401 인증 오류 비재시도 동작을 회귀 테스트로 고정한다.
@@ -35,11 +36,12 @@
 ## 검증 결과
 
 - Python compile: 성공
-- pytest: `362 passed`
+- pytest: `363 passed`
 - GitHub Actions `CampaignPulse checks`: 성공
 - 마켓플레이스 파일 감지 회귀 테스트: 성공
 - 수집 로그 타임존 정규화 회귀 테스트: 성공
 - 수집 로그 최근 30일 성공률 회귀 테스트: 성공
+- 오래된 성공만 있는 매체의 최근 성공률 미표시 회귀 테스트: 성공
 - 네이버 날짜 범위 및 빈 데이터 로그 테스트: 성공
 - 네이버 HTTP 재시도/비재시도 회귀 테스트: 성공
 - 온라인 데모 안내: 정상
