@@ -343,3 +343,33 @@ def test_naver_collection_log_records_no_data_without_raw_customer_id(tmp_path):
     assert "demo-customer" not in rows[0]["advertiser_id"]
     status = collection_status_by_media(db_path)["naver_searchad"]
     assert status["latest_status"] == "no_data"
+
+def test_naver_collection_log_records_partial_when_pipeline_fails(tmp_path):
+    db_path = tmp_path / "collection_log.sqlite3"
+    csv_path = tmp_path / "naver_searchad_standard.csv"
+    csv_path.write_text("date,impressions\n2026-06-19,100\n", encoding="utf-8")
+    context = {
+        "started_at": "2026-06-19 09:00:00",
+        "response_data_rows": 5,
+        "standard_csv_rows": 5,
+        "zero_guard_applied": False,
+        "standard_csv_path": str(csv_path),
+        "report_paths": {},
+    }
+    results = [
+        PocStepResult("기간 성과 조회", "성공", "stats API 조회 성공"),
+        PocStepResult("AIMAOS 기존 파이프라인 연결", "실패", "파이프라인 연결 실패"),
+        PocStepResult("보고서 자동 생성", "대기", "파이프라인 확인 필요"),
+    ]
+
+    step = write_naver_collection_log(credentials(), context, results, db_path)
+
+    assert step.status == "성공"
+    rows = recent_collection_logs(10, db_path)
+    assert rows[0]["status"] == "partial"
+    assert rows[0]["error_code"] == "NAVER_PIPELINE_PARTIAL"
+    assert rows[0]["rows_collected"] == 5
+    assert rows[0]["file_count"] == 1
+    status = collection_status_by_media(db_path)["naver_searchad"]
+    assert status["latest_status"] == "partial"
+
