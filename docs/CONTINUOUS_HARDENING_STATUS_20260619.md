@@ -1,6 +1,6 @@
 # CampaignPulse Continuous Hardening Status
 
-기록일: 2026-06-20
+기록일: 2026-07-22
 
 ## 실제 변경 파일
 
@@ -24,6 +24,7 @@
 - `tests/test_marketplace_collection.py`
 - `tests/test_demo_deploy_readiness.py`
 - `tests/test_naver_searchad_poc.py`
+  - 네이버 API HTTP 429 계열 재시도와 401 인증 오류 비재시도 동작을 회귀 테스트로 고정한다.
 - `docs/COLLECTION_LOG_SCHEMA.md`
 - `docs/DATA_STATUS_CENTER_REFACTOR.md`
 - `docs/MARKETPLACE_DOWNLOAD_SUCCESS_GUARD.md`
@@ -32,10 +33,11 @@
 ## 검증 결과
 
 - Python compile: 성공
-- pytest: `32 passed`
+- pytest: `360 passed`
 - GitHub Actions `CampaignPulse checks`: 성공
 - 마켓플레이스 파일 감지 회귀 테스트: 성공
 - 네이버 날짜 범위 및 빈 데이터 로그 테스트: 성공
+- 네이버 HTTP 재시도/비재시도 회귀 테스트: 성공
 - 온라인 데모 안내: 정상
 - 온라인 데이터 확인 필요: 1개 채널
 - 온라인 주요 메뉴 8개: 모두 정상
