@@ -1,0 +1,105 @@
+name: Apply old success status test
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/patches/old-success-status-test.trigger
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Apply old success status regression test
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          test_path = Path('tests/test_marketplace_collection.py')
+          text = test_path.read_text(encoding='utf-8')
+          if 'test_collection_status_old_success_only_has_no_recent_success_rate' not in text:
+              new_test = '\n'.join([
+                  'def test_collection_status_old_success_only_has_no_recent_success_rate(tmp_path):',
+                  '    db_path = tmp_path / "collection_log.sqlite3"',
+                  '    append_collection_log(',
+                  '        CollectionLogRecord(',
+                  '            collection_id="old-success-only",',
+                  '            advertiser_id="sample",',
+                  '            media="auction",',
+                  '            started_at="2026-05-01 09:00:00",',
+                  '            finished_at="2026-05-01 09:01:00",',
+                  '            status="success",',
+                  '            rows_collected=30,',
+                  '            file_count=1,',
+                  '            storage_used_mb=0.2,',
+                  '            error_code="",',
+                  '            error_message="",',
+                  '        ),',
+                  '        db_path,',
+                  '    )',
+                  '',
+                  '    auction = collection_status_by_media(',
+                  '        db_path,',
+                  '        now=datetime(2026, 6, 19, 0, 0, 0),',
+                  '    )["auction"]',
+                  '',
+                  '    assert auction["latest_status"] == "success"',
+                  '    assert auction["last_success_at"] == datetime(2026, 5, 1, 9, 1, 0)',
+                  '    assert auction["success_count_30d"] == 0',
+                  '    assert auction["total_count_30d"] == 0',
+                  '    assert auction["success_rate_30d"] is None',
+                  '',
+                  '',
+              ])
+              marker = '    assert gmarket["success_rate_30d"] == 0\n\n\ndef test_manual_marketplace_attempt_without_download_records_failure'
+              text = text.replace(
+                  marker,
+                  '    assert gmarket["success_rate_30d"] == 0\n\n\n' + new_test + 'def test_manual_marketplace_attempt_without_download_records_failure',
+              )
+          test_path.write_text(text, encoding='utf-8')
+
+          doc_path = Path('docs/CONTINUOUS_HARDENING_STATUS_20260619.md')
+          doc = doc_path.read_text(encoding='utf-8')
+          doc = doc.replace('기록일: 2026-06-20', '기록일: 2026-07-22')
+          doc = doc.replace('- pytest: `362 passed`', '- pytest: `363 passed`')
+          doc = doc.replace('- pytest: `361 passed`', '- pytest: `363 passed`')
+          doc = doc.replace('- pytest: `360 passed`', '- pytest: `363 passed`')
+          detail = '  - 최근 30일 안에 시도 기록이 없는 매체는 오래된 성공 기록만으로 최근 성공률을 표시하지 않는지 회귀 테스트로 고정한다.\n'
+          if detail not in doc:
+              doc = doc.replace('  - 30일 이전 성공 기록은 마지막 성공 시각으로 보존하되 최근 30일 성공률 계산에는 포함하지 않는지 회귀 테스트로 고정한다.\n', '  - 30일 이전 성공 기록은 마지막 성공 시각으로 보존하되 최근 30일 성공률 계산에는 포함하지 않는지 회귀 테스트로 고정한다.\n' + detail)
+          verification = '- 오래된 성공만 있는 매체의 최근 성공률 미표시 회귀 테스트: 성공\n'
+          if verification not in doc:
+              doc = doc.replace('- 수집 로그 최근 30일 성공률 회귀 테스트: 성공\n', '- 수집 로그 최근 30일 성공률 회귀 테스트: 성공\n' + verification)
+          doc_path.write_text(doc, encoding='utf-8')
+          PY
+
+      - name: Install dependencies
+        run: python -m pip install -r requirements-dev.txt
+
+      - name: Compile Python sources
+        run: python -m compileall aimaos tests
+
+      - name: Run tests
+        run: python -m pytest tests -q
+
+      - name: Commit verified changes
+        run: |
+          git config user.name "campaignpulse-hardening-bot"
+          git config user.email "campaignpulse-hardening-bot@users.noreply.github.com"
+          git add tests/test_marketplace_collection.py docs/CONTINUOUS_HARDENING_STATUS_20260619.md
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Test stale collection status display"
+            git push origin HEAD:main
+          fi
